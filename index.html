@@ -37,33 +37,37 @@
         <span class="brand-icon">🍳</span>
         <span class="brand-name">Carnet de Recettes <span style="font-size:0.6rem; background:linear-gradient(135deg, var(--primary), var(--accent)); color:white; padding:3px 8px; border-radius:12px; margin-left:6px; vertical-align:middle; font-weight:800; letter-spacing:0.05em; box-shadow:0 2px 8px rgba(249,115,22,0.3);">V2.0 CLOUD</span></span>
       </div>
-      <nav class="nav" id="main-nav">
-        <button class="nav-btn active" data-tab="home" id="nav-home">
-          <span class="nav-icon">📖</span> Mes Recettes
-        </button>
-        <button class="nav-btn" data-tab="add" id="nav-add">
-          <span class="nav-icon">✏️</span> Ajouter
-        </button>
-        <button class="nav-btn" data-tab="import" id="nav-import">
-          <span class="nav-icon">🔗</span> Importer
-        </button>
-        <button class="nav-btn" data-tab="sites" id="nav-sites">
-          <span class="nav-icon">🌍</span> Sites
-        </button>
-        <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres">
-          ⚙️
-        </button>
-        <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème" aria-label="Basculer thème clair/sombre">
-          🌙
-        </button>
-        <button class="nav-btn" id="nav-auth" style="background:var(--primary-glow);color:var(--primary);display:none;">
-          Se connecter
-        </button>
-        <div id="user-info" style="display:none;align-items:center;gap:10px;margin-left:10px;">
-          <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;" />
-          <button class="btn btn--sm btn--danger" id="nav-logout" style="padding:6px 12px;font-size:0.8rem;">Quitter</button>
+      <div style="display:flex; align-items:center; gap:20px;">
+        <nav class="nav" id="main-nav">
+          <button class="nav-btn active" data-tab="home" id="nav-home">
+            <span class="nav-icon">📖</span> Mes Recettes
+          </button>
+          <button class="nav-btn" data-tab="add" id="nav-add">
+            <span class="nav-icon">✏️</span> Ajouter
+          </button>
+          <button class="nav-btn" data-tab="import" id="nav-import">
+            <span class="nav-icon">🔗</span> Importer
+          </button>
+          <button class="nav-btn" data-tab="sites" id="nav-sites">
+            <span class="nav-icon">🌍</span> Sites
+          </button>
+          <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres">
+            ⚙️
+          </button>
+          <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème" aria-label="Basculer thème clair/sombre">
+            🌙
+          </button>
+        </nav>
+        <div class="auth-section">
+          <button class="btn btn--sm" id="nav-auth" style="background:var(--primary-glow);color:var(--primary);border:1px solid rgba(249,115,22,0.4);display:none;font-weight:800;">
+            Se connecter
+          </button>
+          <div id="user-info" style="display:none;align-items:center;gap:10px;">
+            <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;box-shadow:0 2px 8px rgba(249,115,22,0.3);" />
+            <button class="btn btn--sm btn--danger" id="nav-logout" style="padding:6px 12px;font-size:0.75rem;">Quitter</button>
+          </div>
         </div>
-      </nav>
+      </div>
     </div>
   </header>
 

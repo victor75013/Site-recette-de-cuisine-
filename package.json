@@ -1,0 +1,18 @@
+{
+  "name": "application-recette-de-cuisine",
+  "version": "1.0.0",
+  "description": "Carnet de recettes personnel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "puppeteer": "^24.40.0"
+  }
+}

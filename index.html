@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Carnet de Recettes</title>
+  <meta name="description" content="Centralisez et gérez toutes vos recettes de cuisine en un seul endroit." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f97316" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Recettes" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Anti-flash thème : applique le thème avant le rendu -->
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ====== HEADER / NAVIGATION ====== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">🍳</span>
+        <span class="brand-name">Carnet de Recettes</span>
+      </div>
+      <nav class="nav" id="main-nav">
+        <button class="nav-btn active" data-tab="home" id="nav-home">
+          <span class="nav-icon">📖</span> Mes Recettes
+        </button>
+        <button class="nav-btn" data-tab="add" id="nav-add">
+          <span class="nav-icon">✏️</span> Ajouter
+        </button>
+        <button class="nav-btn" data-tab="import" id="nav-import">
+          <span class="nav-icon">🔗</span> Importer
+        </button>
+        <button class="nav-btn" data-tab="sites" id="nav-sites">
+          <span class="nav-icon">🌍</span> Sites
+        </button>
+        <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres">
+          ⚙️
+        </button>
+        <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème" aria-label="Basculer thème clair/sombre">
+          🌙
+        </button>
+        <button class="nav-btn" id="nav-auth" style="background:var(--primary-glow);color:var(--primary);display:none;">
+          Se connecter
+        </button>
+        <div id="user-info" style="display:none;align-items:center;gap:10px;margin-left:10px;">
+          <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;" />
+          <button class="btn btn--sm btn--danger" id="nav-logout" style="padding:6px 12px;font-size:0.8rem;">Quitter</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main">
+    <div id="app">
+      <!-- Contenu dynamique injecté par JavaScript -->
+    </div>
+  </main>
+
+  <!-- ====== MODAL détail recette ====== -->
+  <div class="modal-overlay" id="modal-overlay" aria-hidden="true">
+    <div class="modal" id="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modal-close" aria-label="Fermer">✕</button>
+      <div class="modal-content" id="modal-content">
+        <!-- Fiche détail injectée ici -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== TOAST NOTIFICATIONS ====== -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- ====== BOTTOM NAV MOBILE ====== -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-btn active" data-tab="home" id="bnav-home">
+      <span class="bottom-nav-icon">📖</span>
+      <span class="bottom-nav-label">Recettes</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="add" id="bnav-add">
+      <span class="bottom-nav-icon">✏️</span>
+      <span class="bottom-nav-label">Ajouter</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="import" id="bnav-import">
+      <span class="bottom-nav-icon">🔗</span>
+      <span class="bottom-nav-label">Importer</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="sites" id="bnav-sites">
+      <span class="bottom-nav-icon">🌍</span>
+      <span class="bottom-nav-label">Sites</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="settings" id="bnav-settings">
+      <span class="bottom-nav-icon">⚙️</span>
+      <span class="bottom-nav-label">Réglages</span>
+    </button>
+    <button class="bottom-nav-btn" id="bnav-theme" aria-label="Basculer thème" style="color:var(--text-dim);">
+      <span class="bottom-nav-icon" id="bnav-theme-icon">🌙</span>
+      <span class="bottom-nav-label">Thème</span>
+    </button>
+  </nav>
+
+  <!-- ====== MODULES JS ====== -->
+  <!-- Firebase Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
+
+  <script src="js/data.js"></script>
+  <script src="js/recipes.js"></script>
+  <script src="js/form.js"></script>
+  <script src="js/importer.js"></script>
+  <script src="js/sites.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('✅ Service Worker enregistré'))
+        .catch(err => console.warn('⚠️ SW:', err));
+    }
+  </script>
+</body>
+</html>

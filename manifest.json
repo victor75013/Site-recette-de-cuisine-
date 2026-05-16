@@ -2,7 +2,7 @@
   "name": "Carnet de Recettes",
   "short_name": "Recettes",
   "description": "Centralisez et gérez toutes vos recettes de cuisine en un seul endroit.",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f8fafc",

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carnet-recettes-v3';
+const CACHE_NAME = 'carnet-recettes-v4';
 const APP_SHELL = ['/', '/index.html', '/css/style.css', '/js/data.js', '/js/recipes.js', '/js/form.js', '/js/importer.js', '/js/sites.js', '/js/app.js', '/manifest.json'];
 
 self.addEventListener('install', (event) => {

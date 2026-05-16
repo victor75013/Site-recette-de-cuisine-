@@ -19,6 +19,15 @@ if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
+
+// Activer le mode hors-ligne de Firebase (Offline Persistence)
+db.enablePersistence().catch(function(err) {
+  if (err.code === 'failed-precondition') {
+    console.warn("Le mode hors-ligne ne fonctionne que dans un seul onglet à la fois.");
+  } else if (err.code === 'unimplemented') {
+    console.warn("Le navigateur ne supporte pas le mode hors-ligne de Firebase.");
+  }
+});
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 

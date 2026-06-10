@@ -1,0 +1,6 @@
+/* AUTHOR TABS */
+.author-tabs{display:flex;gap:12px;overflow-x:auto;padding-bottom:12px;margin-bottom:28px;scrollbar-width:none;}
+.author-tabs::-webkit-scrollbar{display:none;}
+.author-tab{padding:10px 22px;background:var(--surface);border:1px solid var(--border);border-radius:30px;color:var(--text-muted);font-size:0.9rem;font-weight:700;white-space:nowrap;cursor:pointer;transition:all 0.3s cubic-bezier(0.175,0.885,0.32,1.275);box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.author-tab:hover{background:var(--surface-2);color:var(--text);transform:translateY(-2px);}
+.author-tab.active{background:var(--primary-glow);color:var(--primary);border-color:rgba(249,115,22,0.5);box-shadow:0 6px 16px var(--primary-glow);transform:translateY(-2px);}

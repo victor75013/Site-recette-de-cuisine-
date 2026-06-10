@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Carnet de Recettes</title>
   <meta name="description" content="Centralisez et gérez toutes vos recettes de cuisine en un seul endroit." />
 
@@ -18,11 +20,12 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
 
   <!-- Anti-flash thème : applique le thème avant le rendu -->
   <script>
-    (function() {
+    (function () {
       const t = localStorage.getItem('theme');
       if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
     })();
@@ -32,14 +35,18 @@
   <link rel="stylesheet" href="css/layout.css" />
   <link rel="stylesheet" href="css/components.css" />
 </head>
+
 <body>
 
   <!-- ====== HEADER / NAVIGATION ====== -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
-        <img src="assets/icons/icon-512.png" alt="Logo" class="brand-icon" style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
-        <span class="brand-name">Carnet de Recettes <span style="font-size:0.6rem; background:linear-gradient(135deg, var(--primary), var(--accent)); color:white; padding:3px 8px; border-radius:12px; margin-left:6px; vertical-align:middle; font-weight:800; letter-spacing:0.05em; box-shadow:0 2px 8px rgba(249,115,22,0.3);">V2.0 CLOUD</span></span>
+        <img src="assets/icons/icon-512.png" alt="Logo" class="brand-icon"
+          style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
+        <span class="brand-name">Carnet de Recettes <span
+            style="font-size:0.6rem; background:linear-gradient(135deg, var(--primary), var(--accent)); color:white; padding:3px 8px; border-radius:12px; margin-left:6px; vertical-align:middle; font-weight:800; letter-spacing:0.05em; box-shadow:0 2px 8px rgba(249,115,22,0.3);">V2.0
+            CLOUD</span></span>
       </div>
       <div style="display:flex; align-items:center; gap:20px;">
         <nav class="nav" id="main-nav">
@@ -58,17 +65,21 @@
           <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres">
             ⚙️
           </button>
-          <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème" aria-label="Basculer thème clair/sombre">
+          <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème"
+            aria-label="Basculer thème clair/sombre">
             🌙
           </button>
         </nav>
         <div class="auth-section">
-          <button class="btn btn--sm" id="nav-auth" style="background:var(--primary-glow);color:var(--primary);border:1px solid rgba(249,115,22,0.4);display:none;font-weight:800;">
+          <button class="btn btn--sm" id="nav-auth"
+            style="background:var(--primary-glow);color:var(--primary);border:1px solid rgba(249,115,22,0.4);display:none;font-weight:800;">
             Se connecter
           </button>
           <div id="user-info" style="display:none;align-items:center;gap:10px;">
-            <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;box-shadow:0 2px 8px rgba(249,115,22,0.3);" />
-            <button class="btn btn--sm btn--danger" id="nav-logout" style="padding:6px 12px;font-size:0.75rem;">Quitter</button>
+            <img id="user-avatar" src="" alt=""
+              style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;box-shadow:0 2px 8px rgba(249,115,22,0.3);" />
+            <button class="btn btn--sm btn--danger" id="nav-logout"
+              style="padding:6px 12px;font-size:0.75rem;">Quitter</button>
           </div>
         </div>
       </div>
@@ -145,4 +156,5 @@
     }
   </script>
 </body>
+
 </html>

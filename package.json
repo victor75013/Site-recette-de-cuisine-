@@ -2,9 +2,9 @@
   "name": "application-recette-de-cuisine",
   "version": "1.0.0",
   "description": "Carnet de recettes personnel",
-  "main": "server.js",
+  "main": "api/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node api/server.js"
   },
   "keywords": [],
   "author": "",

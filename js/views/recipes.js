@@ -77,8 +77,8 @@ function renderRecipeCard(recipe) {
   `;
 }
 
-
 let currentAuthorFilter = '';
+let currentCategoryFilter = '';
 
 async function renderRecipeGrid() {
   const app = document.getElementById('app');
@@ -88,54 +88,81 @@ async function renderRecipeGrid() {
   const authors = [...new Set(allRecipes.map(r => r.author).filter(Boolean))].sort();
   const categories = [...new Set(allRecipes.map(r => r.category).filter(Boolean))].sort();
 
-  const authorTabsHtml = authors.length > 0 ? `
-    <div class="author-tabs" id="author-tabs">
-      <button class="author-tab active" data-author="">Toutes</button>
-      ${authors.map(a => `<button class="author-tab" data-author="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join('')}
-    </div>
-  ` : '';
-
-  const categoryOptions = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-
   app.innerHTML = `
     <div class="page-header">
       <h1 class="page-title">Mes <span>Recettes</span></h1>
       <span class="recipe-count" id="recipe-count">${allRecipes.length} recette${allRecipes.length !== 1 ? 's' : ''}</span>
     </div>
 
-    ${authorTabsHtml}
-
     <div class="toolbar">
       <div class="search-wrap">
         <span class="search-icon">🔍</span>
         <input class="search-input" type="search" id="search-input" placeholder="Rechercher une recette, un ingrédient…" aria-label="Rechercher" />
       </div>
-      <select class="category-select" id="category-select" aria-label="Filtrer par catégorie">
-        <option value="">Toutes les catégories</option>
-        ${categoryOptions}
-      </select>
+      <button class="btn-filter-toggle" id="btn-filter-toggle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+        Filtres
+      </button>
     </div>
 
     <div class="recipe-grid" id="recipe-grid"></div>
   `;
 
-  currentAuthorFilter = '';
+  // Injecter les filtres dans la sidebar
+  const filterContent = document.getElementById('filter-content');
+  if (filterContent) {
+    const authorOptions = authors.map(a => `<button class="filter-btn filter-author-btn ${a === currentAuthorFilter ? 'active' : ''}" data-author="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join('');
+    const categoryOptions = categories.map(c => `<button class="filter-btn filter-category-btn ${c === currentCategoryFilter ? 'active' : ''}" data-category="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('');
+    
+    filterContent.innerHTML = `
+      <details class="filter-group" open>
+        <summary>Catégories</summary>
+        <div class="filter-options">
+          <button class="filter-btn filter-category-btn ${!currentCategoryFilter ? 'active' : ''}" data-category="">Toutes les catégories</button>
+          ${categoryOptions}
+        </div>
+      </details>
+      ${authors.length > 0 ? `
+      <details class="filter-group" open>
+        <summary>Auteurs</summary>
+        <div class="filter-options">
+          <button class="filter-btn filter-author-btn ${!currentAuthorFilter ? 'active' : ''}" data-author="">Tous les auteurs</button>
+          ${authorOptions}
+        </div>
+      </details>
+      ` : ''}
+    `;
 
-  document.getElementById('search-input').addEventListener('input', updateRecipeGrid);
-  document.getElementById('category-select').addEventListener('change', updateRecipeGrid);
-
-  const authorTabsContainer = document.getElementById('author-tabs');
-  if (authorTabsContainer) {
-    authorTabsContainer.addEventListener('click', (e) => {
-      if (e.target.classList.contains('author-tab')) {
-        document.querySelectorAll('.author-tab').forEach(t => t.classList.remove('active'));
+    // Événements des filtres
+    filterContent.querySelectorAll('.filter-author-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        filterContent.querySelectorAll('.filter-author-btn').forEach(b => b.classList.remove('active'));
         e.target.classList.add('active');
         currentAuthorFilter = e.target.dataset.author || '';
         updateRecipeGrid();
-      }
+      });
+    });
+
+    filterContent.querySelectorAll('.filter-category-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        filterContent.querySelectorAll('.filter-category-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentCategoryFilter = e.target.dataset.category || '';
+        updateRecipeGrid();
+      });
     });
   }
 
+  // Événements toolbar
+  document.getElementById('search-input')?.addEventListener('input', updateRecipeGrid);
+  
+  document.getElementById('btn-filter-toggle')?.addEventListener('click', openFilters);
+  document.getElementById('filter-close')?.addEventListener('click', closeFilters);
+  document.getElementById('filter-overlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'filter-overlay') closeFilters();
+  });
+
+  // Événements grille
   document.getElementById('recipe-grid').addEventListener('click', (e) => {
     const card = e.target.closest('.recipe-card');
     if (card) openRecipeDetail(card.dataset.id);
@@ -157,12 +184,12 @@ async function updateRecipeGrid() {
   if (!grid) return;
 
   const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
-  const categoryFilter = document.getElementById('category-select')?.value || '';
 
   const allRecipes = await getAllRecipes();
   let recipes = [...allRecipes];
 
   if (currentAuthorFilter) recipes = recipes.filter(r => r.author === currentAuthorFilter);
+  if (currentCategoryFilter) recipes = recipes.filter(r => r.category === currentCategoryFilter);
   if (searchQuery) {
     recipes = recipes.filter(r =>
       r.title?.toLowerCase().includes(searchQuery) ||
@@ -172,19 +199,36 @@ async function updateRecipeGrid() {
       r.ingredients?.some(i => i.toLowerCase().includes(searchQuery))
     );
   }
-  if (categoryFilter) recipes = recipes.filter(r => r.category === categoryFilter);
 
   if (countSpan) countSpan.textContent = `${recipes.length} recette${recipes.length !== 1 ? 's' : ''}`;
 
   const emptyState = `
     <div class="empty-state">
-      <div class="empty-state-icon">${searchQuery || categoryFilter || currentAuthorFilter ? '🔍' : '📭'}</div>
-      <h3>${searchQuery || categoryFilter || currentAuthorFilter ? 'Aucune recette trouvée' : 'Aucune recette pour l\'instant'}</h3>
-      <p>${searchQuery || categoryFilter || currentAuthorFilter ? 'Essayez d\'autres termes.' : 'Commencez par ajouter ou importer une recette.'}</p>
+      <div class="empty-state-icon">${searchQuery || currentCategoryFilter || currentAuthorFilter ? '🔍' : '📭'}</div>
+      <h3>${searchQuery || currentCategoryFilter || currentAuthorFilter ? 'Aucune recette trouvée' : "Aucune recette pour l'instant"}</h3>
+      <p>${searchQuery || currentCategoryFilter || currentAuthorFilter ? "Essayez d'autres termes ou filtres." : 'Commencez par ajouter ou importer une recette.'}</p>
     </div>
   `;
 
   grid.innerHTML = recipes.length > 0 ? recipes.map(renderRecipeCard).join('') : emptyState;
+}
+
+function openFilters() {
+  const overlay = document.getElementById('filter-overlay');
+  if (overlay) {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeFilters() {
+  const overlay = document.getElementById('filter-overlay');
+  if (overlay) {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
 }
 
 // ---------- FICHE DÉTAIL ----------

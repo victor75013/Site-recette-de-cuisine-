@@ -91,6 +91,19 @@
     </div>
   </main>
 
+  <!-- ====== FILTRES (PROGRESSIVE DISCLOSURE) ====== -->
+  <div class="filter-overlay" id="filter-overlay" aria-hidden="true">
+    <aside class="filter-sidebar" id="filter-sidebar" role="dialog" aria-modal="true">
+      <div class="filter-header">
+        <h2>Filtres</h2>
+        <button class="filter-close" id="filter-close" aria-label="Fermer les filtres">✕</button>
+      </div>
+      <div class="filter-content" id="filter-content">
+        <!-- Accordeons injectés ici par JS -->
+      </div>
+    </aside>
+  </div>
+
   <!-- ====== MODAL détail recette ====== -->
   <div class="modal-overlay" id="modal-overlay" aria-hidden="true">
     <div class="modal" id="modal" role="dialog" aria-modal="true">

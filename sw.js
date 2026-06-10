@@ -1,5 +1,5 @@
-const CACHE_NAME = 'carnet-recettes-v12';
-const APP_SHELL = ['/', '/index.html', '/css/base.css', '/css/layout.css', '/css/components.css', '/js/core/data.js', '/js/views/recipes.js', '/js/views/form.js', '/js/core/importer.js', '/js/views/sites.js', '/js/app.js', '/manifest.json'];
+const CACHE_NAME = 'carnet-recettes-v13';
+const APP_SHELL = ['/', '/index.html', '/css/theme.css', '/css/base.css', '/css/layout.css', '/css/components.css', '/js/core/data.js', '/js/views/recipes.js', '/js/views/form.js', '/js/core/importer.js', '/js/views/sites.js', '/js/app.js', '/manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

@@ -5,62 +5,155 @@
   gap: 16px;
 }
 
+/* ─── Couleurs dominantes par défaut (fallback si pas d'image) ─── */
 .recipe-card {
-  background: transparent;
-  border: none;
-  border-radius: var(--radius);
-  overflow: hidden;
-  cursor: pointer;
+  --card-dominant-r: 80;
+  --card-dominant-g: 80;
+  --card-dominant-b: 100;
+
   position: relative;
-  /* Netflix hover scale effect on the whole card */
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
   animation: fadeSlideIn 0.5s ease both;
+  min-height: 380px;
+
+  /* Fond basé sur la couleur dominante extraite */
+  background: rgb(
+    var(--card-dominant-r),
+    var(--card-dominant-g),
+    var(--card-dominant-b)
+  );
+
+  /* Ombre colorée : même teinte que le fond, effet "glow" Apple Music */
+  box-shadow:
+    0 10px 30px -10px rgba(
+      var(--card-dominant-r),
+      var(--card-dominant-g),
+      var(--card-dominant-b),
+      0.5
+    ),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Quand la couleur dominante est disponible ─── */
+.recipe-card.has-dominant-color {
+  box-shadow:
+    0 12px 36px -8px rgba(
+      var(--card-dominant-r),
+      var(--card-dominant-g),
+      var(--card-dominant-b),
+      0.65
+    ),
+    0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .recipe-card:hover {
-  transform: scale(1.03);
+  transform: scale(1.03) translateY(-6px);
+  box-shadow:
+    0 24px 50px -12px rgba(
+      var(--card-dominant-r),
+      var(--card-dominant-g),
+      var(--card-dominant-b),
+      0.75
+    ),
+    0 8px 20px rgba(0, 0, 0, 0.3);
   z-index: 10;
 }
 
 @keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .recipe-card:nth-child(1) { animation-delay: 0ms; }
-.recipe-card:nth-child(2) { animation-delay: 50ms; }
-.recipe-card:nth-child(3) { animation-delay: 100ms; }
-.recipe-card:nth-child(4) { animation-delay: 150ms; }
-.recipe-card:nth-child(5) { animation-delay: 200ms; }
-.recipe-card:nth-child(6) { animation-delay: 250ms; }
-.recipe-card:nth-child(n+7) { animation-delay: 300ms; }
+.recipe-card:nth-child(2) { animation-delay: 40ms; }
+.recipe-card:nth-child(3) { animation-delay: 80ms; }
+.recipe-card:nth-child(4) { animation-delay: 120ms; }
+.recipe-card:nth-child(5) { animation-delay: 160ms; }
+.recipe-card:nth-child(6) { animation-delay: 200ms; }
+.recipe-card:nth-child(n+7) { animation-delay: 240ms; }
 
+/* ─── Fond coloré dégradé : zone basse de la carte ─── */
+/* Couche 1 : dégradé couleur dominante (remplace l'ancien card-bg-blur) */
+.card-color-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.0)  0%,
+    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.6) 60%,
+    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.95) 100%
+  );
+}
+
+/* ─── Couche 2 : image floutée en fond (boost de saturation / couleur) ─── */
+.card-bg-blur {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.card-bg-blur img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(40px) saturate(300%) brightness(0.85);
+  transform: scale(2.2);
+  opacity: 0.6;
+  transition: opacity 0.5s ease;
+}
+
+/* ─── Overlay de noircissement pour lisibilité ─── */
+.card-bg-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.25) 50%,
+    rgba(0, 0, 0, 0.70) 100%
+  );
+}
+
+/* ─── Image principale avec fondu vers le bas ─── */
 .card-image-wrap {
   width: 100%;
-  aspect-ratio: 4/5; /* Portrait format Insta/Netflix */
+  aspect-ratio: 1 / 1;
   position: relative;
-  overflow: hidden;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  z-index: 2;
+  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  flex-shrink: 0;
 }
 
 .card-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  background: var(--surface);
-  /* The zoom is inside the image wrap */
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  display: block;
 }
 
 .recipe-card:hover .card-image {
-  transform: scale(1.08);
+  transform: scale(1.07);
 }
 
 .card-image-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  background: linear-gradient(
+    135deg,
+    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.3),
+    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.6)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -72,61 +165,60 @@
   transform: scale(1.08);
 }
 
-/* Netflix style gradient */
-.card-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 40%, transparent 100%);
+/* ─── Contenu texte en bas de la carte ─── */
+.card-info {
+  position: relative;
+  z-index: 3;
+  padding: 0 20px 24px 20px;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   justify-content: flex-end;
-  padding: 20px;
-  transition: background 0.4s ease;
+  margin-top: -80px;
 }
 
-.recipe-card:hover .card-overlay {
-  background: linear-gradient(to top, rgba(0,0,0,0.98) 0%, rgba(0,0,0,0.5) 45%, transparent 100%);
-}
-
+/* Badge de catégorie : glassmorphism teinté */
 .card-category {
   display: inline-block;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: white;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
   width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-title {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: white;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-  margin-bottom: 6px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .card-meta {
   display: flex;
-  gap: 12px;
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.7);
+  gap: 10px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.80);
+  font-weight: 500;
   flex-wrap: wrap;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-weight: 500;
+  gap: 4px;
 }
 
 /* Hide description strip as agreed */
@@ -134,6 +226,7 @@
   display: none;
 }
 
+/* ─── État vide ─── */
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
@@ -166,14 +259,11 @@
   font-size: 0.95rem;
 }
 
-/* RESPONSIVE */
-@media(max-width: 768px) {
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
   .recipe-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-  }
-  .card-overlay {
-    padding: 12px;
   }
   .card-title {
     font-size: 0.95rem;
@@ -184,13 +274,10 @@
   }
 }
 
-@media(max-width: 400px) {
+@media (max-width: 400px) {
   .recipe-grid {
     grid-template-columns: 1fr;
     gap: 16px;
-  }
-  .card-overlay {
-    padding: 16px;
   }
   .card-title {
     font-size: 1.2rem;

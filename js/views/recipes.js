@@ -64,13 +64,18 @@ function renderRecipeCard(recipe) {
 
   return `
     <article class="recipe-card" data-id="${recipe.id}" role="button" tabindex="0" aria-label="Voir ${escapeHtml(recipe.title)}">
+      ${recipe.imageUrl ? `<div class="card-bg-blur"><img src="${escapeHtml(recipe.imageUrl)}" aria-hidden="true" loading="lazy" /></div>` : ''}
+      <div class="card-color-wash"></div>
+      <div class="card-bg-overlay"></div>
+      
       <div class="card-image-wrap">
         ${imageContent}
-        <div class="card-overlay">
-          ${recipe.category ? `<span class="card-category">${emoji} ${escapeHtml(recipe.category)}</span>` : ''}
-          <h2 class="card-title">${escapeHtml(recipe.title)}</h2>
-          ${metaItems ? `<div class="card-meta">${metaItems}</div>` : ''}
-        </div>
+      </div>
+      
+      <div class="card-info">
+        ${recipe.category ? `<span class="card-category">${emoji} ${escapeHtml(recipe.category)}</span>` : ''}
+        <h2 class="card-title">${escapeHtml(recipe.title)}</h2>
+        ${metaItems ? `<div class="card-meta">${metaItems}</div>` : ''}
       </div>
       ${recipe.description ? `<div class="card-desc-strip">${escapeHtml(recipe.description)}</div>` : ''}
     </article>
@@ -211,6 +216,12 @@ async function updateRecipeGrid() {
   `;
 
   grid.innerHTML = recipes.length > 0 ? recipes.map(renderRecipeCard).join('') : emptyState;
+
+  // Extraction de la couleur dominante sur chaque carte après le rendu
+  if (recipes.length > 0 && typeof applyDominantColorsToGrid === 'function') {
+    // Légère attente pour que les images commencent à charger
+    requestAnimationFrame(() => applyDominantColorsToGrid());
+  }
 }
 
 function openFilters() {
@@ -301,6 +312,11 @@ async function openRecipeDetail(id) {
   overlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
 
+  // Appliquer la couleur dominante de l'image sur la modal
+  if (recipe.imageUrl && typeof applyDominantColorToModal === 'function') {
+    applyDominantColorToModal(recipe.imageUrl);
+  }
+
   document.getElementById('btn-edit-recipe').addEventListener('click', () => {
     closeModal();
     renderAddEditForm(recipe.id);
@@ -323,7 +339,16 @@ async function openRecipeDetail(id) {
 
 function closeModal() {
   const overlay = document.getElementById('modal-overlay');
+  const modal = document.getElementById('modal');
   overlay.classList.remove('open');
   overlay.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+
+  // Réinitialiser la couleur dominante pour la prochaine ouverture
+  if (modal) {
+    modal.style.removeProperty('--modal-dominant-r');
+    modal.style.removeProperty('--modal-dominant-g');
+    modal.style.removeProperty('--modal-dominant-b');
+  }
 }
+

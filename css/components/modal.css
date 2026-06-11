@@ -21,6 +21,11 @@
 }
 
 .modal {
+  /* Couleur dominante extraite de l'image — fallback neutre */
+  --modal-dominant-r: 30;
+  --modal-dominant-g: 30;
+  --modal-dominant-b: 40;
+
   background: var(--bg);
   border: none;
   border-radius: var(--radius-lg);
@@ -31,7 +36,10 @@
   position: relative;
   transform: scale(0.95) translateY(30px);
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+  /* Ombre colorée par la couleur dominante */
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.8),
+    0 0 60px rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.25);
 }
 
 .modal::-webkit-scrollbar {
@@ -96,20 +104,37 @@
   font-size: 8rem;
 }
 
-/* Netflix gradient from the bottom of the image */
+/* Dégradé cinématique teinté par la couleur dominante */
 .detail-image-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, var(--bg) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.4) 100%);
+  /* Fondu vers la couleur dominante en bas, vers le noir en haut */
+  background:
+    linear-gradient(
+      to top,
+      rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 1.0)  0%,
+      rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.6) 25%,
+      rgba(0, 0, 0, 0.2) 60%,
+      rgba(0, 0, 0, 0.5) 100%
+    );
   pointer-events: none;
 }
 
-/* CONTENT OVERLAY */
+/* CONTENT OVERLAY — fond teinté par la couleur dominante */
 .detail-body {
   padding: 40px;
   position: relative;
   z-index: 2;
-  margin-top: -180px; /* Pull the content up OVER the image */
+  margin-top: -180px;
+  /* Fond dégradé : couleur dominante en haut → bg neutre en bas */
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 1.0) 0%,
+    rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.85) 8%,
+    rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.5) 20%,
+    rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.08) 40%,
+    transparent 60%
+  );
 }
 
 .detail-title {
@@ -208,9 +233,14 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  /* Teinté par la couleur dominante si disponible */
+  background: linear-gradient(
+    135deg,
+    rgb(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b)),
+    var(--primary)
+  );
   flex-shrink: 0;
-  box-shadow: 0 0 10px var(--primary-glow);
+  box-shadow: 0 0 10px rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.5);
 }
 
 .steps-list {
@@ -239,14 +269,17 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--primary);
+  /* Cercle teinté par la couleur dominante */
+  background: rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.2);
+  border: 1.5px solid rgba(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b), 0.5);
+  color: rgb(var(--modal-dominant-r), var(--modal-dominant-g), var(--modal-dominant-b));
   font-size: 1.1rem;
   font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  filter: brightness(1.6) saturate(1.5);
 }
 
 .step-text {

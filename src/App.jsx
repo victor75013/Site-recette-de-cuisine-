@@ -7,6 +7,7 @@ import Sites from './pages/Sites';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
 import { onAuthChange, loginWithGoogle, logout } from './core/data';
+import { LogIn, LogOut } from 'lucide-react';
 
 function ToastContainer() {
   const [toasts, setToasts] = useState([]);
@@ -69,14 +70,14 @@ export default function App() {
             <div className="auth-section">
               {!user ? (
                 <button className="btn btn--sm btn--auth" onClick={loginWithGoogle}>
-                  <span className="auth-icon">🔑</span>
+                  <LogIn className="auth-icon" size={22} strokeWidth={2.5} />
                   <span className="auth-text">Connexion</span>
                 </button>
               ) : (
                 <div className="auth-user">
                   <img src={user.photoURL || ''} alt="Avatar" className="auth-avatar" />
                   <button className="btn btn--sm btn--danger btn--auth" onClick={logout}>
-                    <span className="auth-icon">🚪</span>
+                    <LogOut className="auth-icon" size={22} strokeWidth={2.5} />
                     <span className="auth-text">Quitter</span>
                   </button>
                 </div>

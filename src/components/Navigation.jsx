@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { BookOpen, PenLine, Link, Globe, Settings, Moon } from 'lucide-react';
 
 export default function Navigation() {
   const toggleTheme = () => {
@@ -110,32 +111,32 @@ export default function Navigation() {
       }} />
       
       <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <span className="nav-icon">📖</span>
+        <BookOpen className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Recettes</span>
       </NavLink>
 
       <NavLink to="/add" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <span className="nav-icon">✏️</span>
+        <PenLine className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Ajouter</span>
       </NavLink>
 
       <NavLink to="/import" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <span className="nav-icon">🔗</span>
+        <Link className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Importer</span>
       </NavLink>
 
       <NavLink to="/sites" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <span className="nav-icon">🌍</span>
+        <Globe className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Sites</span>
       </NavLink>
 
       <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-        <span className="nav-icon">⚙️</span>
+        <Settings className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Réglages</span>
       </NavLink>
 
       <button className="nav-item theme-btn" onClick={toggleTheme} title="Changer de thème">
-        <span className="nav-icon">🌙</span>
+        <Moon className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Thème</span>
       </button>
 

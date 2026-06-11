@@ -16,6 +16,7 @@ export default function Navigation() {
 
   // ─── BULLE LIQUIDE (sélectionneur) ───────────────────────────────
   const bubbleRef = useRef({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
+  const bounceTimerRef = useRef(null); // Référence pour nettoyer l'animation si on clique très vite
   const [bubbleStyle, setBubbleStyle] = useState(bubbleRef.current);
   const navRef = useRef(null);
   const location = useLocation();
@@ -36,6 +37,11 @@ export default function Navigation() {
     const newWidth = activeItem.offsetWidth;
     const newHeight = activeItem.offsetHeight;
     const prev = bubbleRef.current;
+
+    // Nettoyage de toute animation de rebond précédente pour éviter les "téléportations" si on clique vite
+    if (bounceTimerRef.current) {
+      clearTimeout(bounceTimerRef.current);
+    }
 
     // Pas d'animation si c'est la première apparition ou un recalcul silencieux
     if (!animate || prev.opacity === 0) {
@@ -68,7 +74,7 @@ export default function Navigation() {
       });
 
       // Rebond : reprise de la forme normale à mi-parcours (250ms sur 500ms)
-      setTimeout(() => {
+      bounceTimerRef.current = setTimeout(() => {
         applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
       }, 250);
     } else {
@@ -78,10 +84,6 @@ export default function Navigation() {
 
   // Quand la route change → animation de la bulle
   useEffect(() => {
-    // Le scrollTo(0, 0) déclenche le scroll handler dans Sidebar.jsx
-    // qui retire sidebar--shrunk AVEC sa transition CSS fluide
-    window.scrollTo(0, 0);
-
     // 50ms de délai : laisse le GPU initialiser le layer de la sidebar (unshrink)
     // avant de lancer l'animation de la bulle. Les deux tournent alors en parallèle !
     const t1 = setTimeout(() => recalcBubble(true), 50);

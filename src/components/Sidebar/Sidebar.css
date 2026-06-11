@@ -253,7 +253,7 @@
     position: fixed;
     bottom: 16px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
 
     /* Taille FIXE : ne dépend plus du contenu, aucun saut de dimensionnement */
     width: calc(100% - 32px) !important;
@@ -270,18 +270,22 @@
     transform-origin: bottom center;
     will-change: transform;
     
-    /* Animation fluide pour le shrink/unshrink au scroll */
+    /* Animation fluide et accélération matérielle stricte (GPU) pour éviter tout jank */
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                 background-color var(--transition);
   }
 
   .sidebar.sidebar--shrunk {
-    transform: translateX(-50%) scale(0.85);
+    transform: translate3d(-50%, 0, 0) scale(0.85);
   }
 
   .sidebar:hover {
     width: calc(100% - 32px) !important;
     max-width: 420px;
+    /* CORRECTION CRITIQUE DE PRIORITÉ : on force le maintien de la transition sur le transform,
+       sinon le hover "desktop" global écrase la transition mobile et supprime le bezier ! */
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                background-color var(--transition);
   }
 
   .sidebar-top,

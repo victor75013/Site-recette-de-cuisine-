@@ -14,57 +14,91 @@ export default function Sidebar() {
     return () => unsubscribe();
   }, []);
 
-  // ─── SCROLL SHRINK (mobile uniquement) ───────────────────────────
-  // Verrou de cooldown : après chaque changement d'état, on bloque pendant 400ms
-  // pour laisser la transition CSS finir tranquillement (zéro conflit possible)
+
+
+  // ─── GESTIONNAIRE DE SCROLL ET VERROUILLAGE (SENIOR APPROACH) ───
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    let cooldown = false;
+    let ticking = false;
+    let isNavigationLocked = false;
+    let lockTimeout = null;
+
+    // Fonction pure pour manipuler le DOM sans re-rendu
+    const setShrunk = (shrunk) => {
+      if (!sidebarRef.current) return;
+      if (shrunk) {
+        sidebarRef.current.classList.add('sidebar--shrunk');
+      } else {
+        sidebarRef.current.classList.remove('sidebar--shrunk');
+      }
+    };
 
     const handleScroll = () => {
-      const sidebar = sidebarRef.current;
-      if (!sidebar || window.innerWidth > 768) return;
+      if (window.innerWidth > 768) return;
+      
+      // Si une navigation est en cours, on IGNORE totalement le scroll
+      if (isNavigationLocked) return;
 
       const currentY = window.scrollY;
-      const isShrunk = sidebar.classList.contains('sidebar--shrunk');
 
-      // PRIORITÉ ABSOLUE : si on est tout en haut → toujours dé-réduire
-      // Couvre le scrollTo(0,0) déclenché par un clic sur une icône de navigation
-      if (currentY <= 0 && isShrunk) {
-        sidebar.classList.remove('sidebar--shrunk');
-        cooldown = true;
-        setTimeout(() => { cooldown = false; }, 400);
-        lastScrollY = 0;
-        return;
-      }
-
-      // Pendant le cooldown, on met juste à jour lastScrollY pour garder la référence correcte
-      if (cooldown) {
+      // Anti-rebond iOS (scroll négatif ou tout en haut)
+      if (currentY <= 0) {
+        setShrunk(false);
         lastScrollY = currentY;
         return;
       }
 
-      const goingDown = currentY > lastScrollY;
-
-      // Scroll vers le bas + assez loin de la page → réduire
-      if (goingDown && currentY > 60 && !isShrunk) {
-        sidebar.classList.add('sidebar--shrunk');
-        cooldown = true;
-        setTimeout(() => { cooldown = false; }, 400);
+      // Seuil de déclenchement pour éviter la sensibilité extrême
+      if (Math.abs(currentY - lastScrollY) > 10) {
+        const goingDown = currentY > lastScrollY;
+        
+        if (goingDown && currentY > 60) {
+          setShrunk(true); // On descend -> rétrécir
+        } else if (!goingDown) {
+          setShrunk(false); // On monte -> agrandir
+        }
+        lastScrollY = currentY;
       }
-      // Scroll vers le haut → agrandir
-      else if (!goingDown && isShrunk) {
-        sidebar.classList.remove('sidebar--shrunk');
-        cooldown = true;
-        setTimeout(() => { cooldown = false; }, 400);
-      }
-
-      lastScrollY = currentY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    // Écouteurs pour le verrouillage lors d'un changement de route
+    const handleNavStart = () => {
+      isNavigationLocked = true;
+      // On force la barre à s'ouvrir de manière fluide AVANT le rendu de la nouvelle page
+      setShrunk(false);
+      if (lockTimeout) clearTimeout(lockTimeout);
+    };
+
+    const handleNavEnd = () => {
+      // On maintient le verrou pendant 300ms APRÈS la fin de navigation
+      // Le temps que l'animation bézier se termine et que le scroll soit stable
+      lockTimeout = setTimeout(() => {
+        isNavigationLocked = false;
+        lastScrollY = window.scrollY; // Réinitialise la référence
+      }, 300);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('navigation-start', handleNavStart);
+    window.addEventListener('navigation-end', handleNavEnd);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('navigation-start', handleNavStart);
+      window.removeEventListener('navigation-end', handleNavEnd);
+      if (lockTimeout) clearTimeout(lockTimeout);
+    };
+  }, []); // Ce hook gère sa propre logique indépendamment de React
 
   return (
     <aside className="sidebar" ref={sidebarRef}>

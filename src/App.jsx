@@ -1,11 +1,35 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import AddEdit from './pages/AddEdit';
 import Sites from './pages/Sites';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
+
+// Ce composant écoute les changements de route sans provoquer de re-rendu ailleurs
+function ScrollManager() {
+  const location = useLocation();
+
+  useEffect(() => {
+    // 1. On signale au reste de l'app (notamment la Sidebar) qu'une transition commence.
+    // Cela permet à la Sidebar de se "verrouiller" ouverte et de désactiver l'écouteur de scroll.
+    window.dispatchEvent(new Event('navigation-start'));
+
+    // 2. On laisse React finir de détruire l'ancienne page et construire la nouvelle.
+    // L'utilisation d'un timeout très court (ou double rAF) garantit que le thread principal 
+    // a le temps de respirer avant de faire le scroll, évitant le jank sur la barre.
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      // 3. On libère le verrou
+      window.dispatchEvent(new Event('navigation-end'));
+    }, 150); // 150ms donne largement le temps à l'appareil (même un vieux téléphone) de peindre la nouvelle page
+
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  return null;
+}
 
 function ToastContainer() {
   const [toasts, React_useState] = React.useState([]);
@@ -39,6 +63,7 @@ function ToastContainer() {
 export default function App() {
   return (
     <Router>
+      <ScrollManager />
       <div className="app-layout">
         
         {/* COMPOSANT ENCAPSULÉ : gère tout ce qui touche à la barre de navigation (design, auth, scroll) */}

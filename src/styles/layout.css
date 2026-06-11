@@ -109,10 +109,11 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  width: 100%;
-  padding: 12px 0;
-  padding-left: 28px; /* Pour centrer l'icône dans les 80px */
-  border: none;
+  width: calc(100% - 24px);
+  margin: 0 12px;
+  padding: 12px 16px; /* Centre parfaitement l'icône à 40px */
+  border: 1px solid transparent;
+  border-radius: 16px;
   background: transparent;
   color: var(--text-muted);
   font-size: 1.05rem;
@@ -120,12 +121,22 @@ body {
   cursor: pointer;
   white-space: nowrap;
   position: relative;
-  transition: color var(--transition);
+  transition: all var(--transition);
   text-decoration: none;
 }
 
-.nav-item:hover, .nav-item.active {
+.nav-item:hover {
   color: var(--text);
+  background: rgba(255, 255, 255, 0.05); /* Léger effet de survol */
+}
+
+.nav-item.active {
+  color: var(--primary);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .nav-icon {
@@ -140,17 +151,9 @@ body {
   transition: opacity var(--nav-transition), transform var(--nav-transition);
 }
 
-/* Indicateur Actif Desktop (barre verticale à gauche) */
+/* On cache le petit trait orange sur PC car on a la bulle maintenant */
 .nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 20px;
-  border-radius: 4px;
-  background: var(--primary);
+  display: none;
 }
 
 /* REVELATION DU TEXTE AU SURVOL DE LA SIDEBAR */
@@ -326,10 +329,16 @@ body {
 
   .nav-item {
     width: auto;
+    margin: 0;
     padding: 8px;
-    flex-direction: column; /* Au cas où, mais le texte est masqué */
+    flex-direction: column;
     justify-content: center;
     gap: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
   }
 
   /* Masque strictement le texte sur mobile (uniquement les icônes) */
@@ -341,8 +350,11 @@ body {
     font-size: 1.5rem;
   }
 
-  /* Indicateur Actif Mobile (point sous l'icône au lieu de barre latérale) */
+  /* Indicateur Actif Mobile (point sous l'icône) */
   .nav-item.active::before {
+    display: block;
+    content: '';
+    position: absolute;
     top: auto;
     bottom: 2px;
     left: 50%;
@@ -350,5 +362,6 @@ body {
     width: 5px;
     height: 5px;
     border-radius: 50%;
+    background: var(--primary);
   }
 }

@@ -40,9 +40,22 @@ body {
   flex-shrink: 0;
 }
 
-/* Expansion au survol */
+/* Expansion au survol (avec un léger délai pour éviter les clignotements si on passe la souris trop vite) */
 .sidebar:hover {
   width: var(--sidebar-width-expanded);
+  /* Le délai de 0.15s agit comme un "filtre" : si la souris quitte avant 0.15s, l'animation ne se lance pas */
+  transition: width var(--nav-transition) 0.15s, background-color var(--transition) 0.15s;
+}
+
+/* Animation Bounce d'Agrandissement (Très rapide) */
+.bounce-animation {
+  animation: sidebarBounce 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes sidebarBounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.01); } /* Très subtil (1% d'agrandissement) */
+  100% { transform: scale(1); }
 }
 
 /* SECTIONS DE LA SIDEBAR */
@@ -103,6 +116,26 @@ body {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  position: relative; /* Nécessaire pour positionner la bulle flottante */
+}
+
+/* LA BULLE COULISSANTE LIQUIDE (Seulement sur PC) */
+.liquid-bubble {
+  position: absolute;
+  left: 12px;
+  width: calc(100% - 24px);
+  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  /* Animation élastique très rapide et fluide (Snappy Spring) */
+  transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
+              height 0.2s ease-out, 
+              opacity 0.2s ease;
+  z-index: 0; /* Passe derrière le texte */
+  pointer-events: none; /* Laisse passer les clics vers les boutons en dessous */
 }
 
 .nav-item {
@@ -123,6 +156,7 @@ body {
   position: relative;
   transition: all var(--transition);
   text-decoration: none;
+  z-index: 1; /* Reste au-dessus de la bulle */
 }
 
 .nav-item:hover {
@@ -130,13 +164,12 @@ body {
   background: rgba(255, 255, 255, 0.05); /* Léger effet de survol */
 }
 
+/* On enlève le fond statique, c'est la bulle qui gère maintenant */
 .nav-item.active {
   color: var(--primary);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .nav-icon {
@@ -162,6 +195,8 @@ body {
 .sidebar:hover .auth-text {
   opacity: 1;
   transform: translateX(0);
+  /* On applique le même délai que la sidebar pour que l'apparition soit synchronisée */
+  transition-delay: 0.15s;
 }
 
 /* AUTH SECTION */
@@ -189,6 +224,7 @@ body {
   width: 80%; /* S'élargit */
   padding-left: 12px;
   border-radius: 12px;
+  transition-delay: 0.15s;
 }
 
 .auth-icon {
@@ -325,6 +361,11 @@ body {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
+  }
+
+  /* Pas de bulle coulissante sur mobile, elle prendrait trop de place visuellement */
+  .liquid-bubble {
+    display: none !important;
   }
 
   .nav-item {

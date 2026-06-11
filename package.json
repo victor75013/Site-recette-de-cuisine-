@@ -4,7 +4,10 @@
   "description": "Carnet de recettes personnel",
   "main": "api/server.js",
   "scripts": {
-    "start": "node api/server.js"
+    "start": "node api/server.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +17,12 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "puppeteer": "^24.40.0",
-    "serve-handler": "^6.1.7"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^8.0.16"
   }
 }

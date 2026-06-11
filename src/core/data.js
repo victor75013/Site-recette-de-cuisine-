@@ -34,17 +34,18 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 export let currentUser = null;
 
 // Auth Listeners
+let authCallbacks = [];
+
+export function onAuthChange(callback) {
+  authCallbacks.push(callback);
+  if (currentUser !== undefined) callback(currentUser);
+  return () => { authCallbacks = authCallbacks.filter(cb => cb !== callback); };
+}
+
 auth.onAuthStateChanged(async user => {
   currentUser = user;
-  const authBtn = document.getElementById('nav-auth');
-  const userInfo = document.getElementById('user-info');
-  const userAvatar = document.getElementById('user-avatar');
   
   if (user) {
-    if (authBtn) authBtn.style.display = 'none';
-    if (userInfo) userInfo.style.display = 'flex';
-    if (userAvatar) userAvatar.src = user.photoURL || '';
-
     // MIGRATION AUTOMATIQUE DES RECETTES LOCALES
     try {
       const localRecipes = JSON.parse(localStorage.getItem('carnetRecettes_v1') || '[]');
@@ -57,20 +58,17 @@ auth.onAuthStateChanged(async user => {
           }
           localStorage.removeItem('carnetRecettes_v1'); // On nettoie
           await fetchRecipesFromDB();
-          if (typeof renderRecipeGrid === 'function' && document.getElementById('recipe-grid')) {
-            await renderRecipeGrid();
-          }
-          alert('Migration terminée avec succès !');
+          const event = new CustomEvent('show-toast', { detail: { message: 'Migration terminée avec succès !', type: 'success' } });
+          window.dispatchEvent(event);
         }
       }
     } catch (e) {
       console.error("Erreur de migration locale:", e);
     }
-
-  } else {
-    if (authBtn) authBtn.style.display = 'block';
-    if (userInfo) userInfo.style.display = 'none';
   }
+
+  // Notify React components
+  authCallbacks.forEach(cb => cb(user));
 });
 
 export function loginWithGoogle() {

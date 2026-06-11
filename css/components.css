@@ -1,11 +1,4 @@
-/* COMPONENTS ENTRY FILE */
-@import url('./components/toolbar.css');
-@import url('./components/filters.css');
-@import url('./components/recipe-card.css');
-@import url('./components/modal.css');
-@import url('./components/form.css');
+/* UI COMPONENTS ENTRY FILE */
 @import url('./components/buttons.css');
-@import url('./components/import.css');
-@import url('./components/settings.css');
+@import url('./components/tabs.css');
 @import url('./components/toasts.css');
-@import url('./components/sites.css');

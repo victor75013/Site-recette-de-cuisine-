@@ -3,6 +3,7 @@
    ============================================================ */
 
 const storage = firebase.storage();
+import { currentUser } from './data.js';
 
 /**
  * Télécharge une image depuis une URL externe (via proxy) et l'envoie sur Firebase Storage.
@@ -10,7 +11,7 @@ const storage = firebase.storage();
  * @param {string} recipeId - ID de la recette pour nommer le fichier (optionnel)
  * @returns {Promise<string>} - L'URL sécurisée de Firebase Storage
  */
-async function ensureImageInStorage(url, recipeId = '') {
+export async function ensureImageInStorage(url, recipeId = '') {
   if (!url) return '';
   // Si l'image est déjà sur notre Firebase Storage ou est une data URI (base64 courte), on ne fait rien
   if (url.includes('firebasestorage.googleapis.com') || url.startsWith('data:')) {
@@ -72,7 +73,7 @@ async function ensureImageInStorage(url, recipeId = '') {
  * @param {string} recipeId - ID de la recette
  * @returns {Promise<string>} - L'URL sécurisée de Firebase Storage
  */
-async function uploadImageFile(file, recipeId = '') {
+export async function uploadImageFile(file, recipeId = '') {
   if (!file) return '';
 
   try {

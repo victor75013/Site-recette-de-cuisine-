@@ -1,5 +1,11 @@
 /* importer.js — Import automatique de recettes */
 
+import { getSettings, saveRecipe, currentUser } from '../../core/data.js';
+import { escapeHtml, showToast } from '../../core/utils.js';
+import { renderAddEditForm } from '../recipe-form/index.js';
+import { renderRecipeGrid } from '../recipes/index.js';
+import { setActiveTab } from '../navigation/index.js';
+
 const CORS_PROXIES = [
   'https://api.allorigins.win/get?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
@@ -75,7 +81,7 @@ async function translateWithGemini(recipe, apiKey) {
   return { ...recipe, ...parsed };
 }
 
-async function renderImportPage() {
+export async function renderImportPage() {
   const app = document.getElementById('app');
   app.innerHTML = `
     <h1 class="form-page-title">🔗 Importer une recette</h1>

@@ -2,6 +2,12 @@
    recipes.js — Affichage des recettes
    ============================================================ */
 
+import { escapeHtml, showToast } from '../../core/utils.js';
+import { getAllRecipes, getRecipeById, deleteRecipe } from '../../core/data.js';
+import { applyDominantColorsToGrid, applyDominantColorToModal } from '../../core/colorExtractor.js';
+import { renderAddEditForm } from '../recipe-form/index.js';
+import { setActiveTab } from '../navigation/index.js';
+
 const CATEGORY_EMOJI = {
   'Entrées': '🥗',
   'Plats principaux': '🍽️',
@@ -35,15 +41,7 @@ function formatTime(minutes) {
   return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+
 
 // ---------- GRILLE ----------
 
@@ -85,7 +83,7 @@ function renderRecipeCard(recipe) {
 let currentAuthorFilter = '';
 let currentCategoryFilter = '';
 
-async function renderRecipeGrid() {
+export async function renderRecipeGrid() {
   const app = document.getElementById('app');
   app.innerHTML = `<div class="empty-state"><h3>Chargement des recettes...</h3></div>`;
   
@@ -337,7 +335,7 @@ async function openRecipeDetail(id) {
   });
 }
 
-function closeModal() {
+export function closeModal() {
   const overlay = document.getElementById('modal-overlay');
   const modal = document.getElementById('modal');
   overlay.classList.remove('open');

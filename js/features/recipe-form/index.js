@@ -2,6 +2,11 @@
    form.js — Formulaire d'ajout / modification de recette
    ============================================================ */
 
+import { getRecipeById, getAllRecipes, saveRecipe, currentUser } from '../../core/data.js';
+import { escapeHtml, showToast } from '../../core/utils.js';
+import { renderRecipeGrid } from '../recipes/index.js';
+import { setActiveTab } from '../navigation/index.js';
+
 const CATEGORIES = [
   'Entrées', 'Plats principaux', 'Desserts', 'Soupes',
   'Salades', 'Marinades', 'Sauces', 'Petits-déjeuners',
@@ -18,7 +23,7 @@ const SERVINGS_UNITS = [
   { value: 'cl',        label: 'cl'        },
 ];
 
-async function renderAddEditForm(editId = null, prefill = null) {
+export async function renderAddEditForm(editId = null, prefill = null) {
   const app    = document.getElementById('app');
   app.innerHTML = `<div class="empty-state"><h3>Chargement...</h3></div>`;
   

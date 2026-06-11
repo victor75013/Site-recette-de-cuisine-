@@ -2,6 +2,9 @@
    sites.js — Page "Sites de recettes"
    ============================================================ */
 
+import { getCustomSites, addCustomSite, deleteCustomSite } from '../../core/data.js';
+import { escapeHtml, showToast } from '../../core/utils.js';
+
 const DEFAULT_SITES = [
   // ── Français ──
   { id: 'marmiton',      name: 'Marmiton',       url: 'https://www.marmiton.org',             description: 'Le site de recettes de cuisine n°1 en France.',                   emoji: '👨‍🍳', tag: '🇫🇷 Français',      color: '#e8521a' },
@@ -21,7 +24,7 @@ const DEFAULT_SITES = [
   { id: 'instagram-food', name:'Instagram Food',   url: 'https://www.instagram.com/explore/tags/recette/', description: 'Inspiration culinaire et recettes sur Instagram.',   emoji: '📸', tag: '📱 Vidéos',         color: '#ad1457' },
 ];
 
-async function renderSitesPage() {
+export async function renderSitesPage() {
   const app = document.getElementById('app');
   const customSites = getCustomSites();
   const all = [...DEFAULT_SITES, ...customSites];

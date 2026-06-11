@@ -47,27 +47,7 @@
         <span class="brand-name">Carnet de Recettes</span>
       </div>
       <div style="display:flex; align-items:center; gap:20px;">
-        <nav class="nav" id="main-nav">
-          <button class="nav-btn active" data-tab="home" id="nav-home">
-            <span class="nav-icon">📖</span> Mes Recettes
-          </button>
-          <button class="nav-btn" data-tab="add" id="nav-add">
-            <span class="nav-icon">✏️</span> Ajouter
-          </button>
-          <button class="nav-btn" data-tab="import" id="nav-import">
-            <span class="nav-icon">🔗</span> Importer
-          </button>
-          <button class="nav-btn" data-tab="sites" id="nav-sites">
-            <span class="nav-icon">🌍</span> Sites
-          </button>
-          <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres">
-            ⚙️
-          </button>
-          <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème"
-            aria-label="Basculer thème clair/sombre">
-            🌙
-          </button>
-        </nav>
+        <nav class="nav" id="main-nav"></nav>
         <div class="auth-section">
           <button class="btn btn--sm" id="nav-auth"
             style="background:var(--primary-glow);color:var(--primary);border:1px solid rgba(249,115,22,0.4);display:none;font-weight:800;">
@@ -118,32 +98,7 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <!-- ====== BOTTOM NAV MOBILE ====== -->
-  <nav class="bottom-nav" id="bottom-nav">
-    <button class="bottom-nav-btn active" data-tab="home" id="bnav-home">
-      <span class="bottom-nav-icon">📖</span>
-      <span class="bottom-nav-label">Recettes</span>
-    </button>
-    <button class="bottom-nav-btn" data-tab="add" id="bnav-add">
-      <span class="bottom-nav-icon">✏️</span>
-      <span class="bottom-nav-label">Ajouter</span>
-    </button>
-    <button class="bottom-nav-btn" data-tab="import" id="bnav-import">
-      <span class="bottom-nav-icon">🔗</span>
-      <span class="bottom-nav-label">Importer</span>
-    </button>
-    <button class="bottom-nav-btn" data-tab="sites" id="bnav-sites">
-      <span class="bottom-nav-icon">🌍</span>
-      <span class="bottom-nav-label">Sites</span>
-    </button>
-    <button class="bottom-nav-btn" data-tab="settings" id="bnav-settings">
-      <span class="bottom-nav-icon">⚙️</span>
-      <span class="bottom-nav-label">Réglages</span>
-    </button>
-    <button class="bottom-nav-btn" id="bnav-theme" aria-label="Basculer thème" style="color:var(--text-dim);">
-      <span class="bottom-nav-icon" id="bnav-theme-icon">🌙</span>
-      <span class="bottom-nav-label">Thème</span>
-    </button>
-  </nav>
+  <nav class="bottom-nav" id="bottom-nav"></nav>
 
   <!-- ====== MODULES JS ====== -->
   <!-- Firebase Compat -->
@@ -151,13 +106,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
 
-  <script src="js/core/data.js"></script>
-  <script src="js/core/colorExtractor.js"></script>
-  <script src="js/views/recipes.js"></script>
-  <script src="js/views/form.js"></script>
-  <script src="js/core/importer.js"></script>
-  <script src="js/views/sites.js"></script>
-  <script src="js/app.js"></script>
+  <script type="module" src="js/main.js"></script>
 
   <!-- Service Worker -->
   <script>

@@ -10,7 +10,7 @@
  * @param {HTMLImageElement} img
  * @returns {{ r: number, g: number, b: number } | null}
  */
-function extractDominantColor(img) {
+export function extractDominantColor(img) {
   try {
     const canvas = document.createElement('canvas');
     const SIZE = 64; // Downsample pour performance
@@ -74,7 +74,7 @@ function extractDominantColor(img) {
 /**
  * Convertit RGB en HSL.
  */
-function rgbToHsl(r, g, b) {
+export function rgbToHsl(r, g, b) {
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b), min = Math.min(r, g, b);
   let h, s, l = (max + min) / 2;
@@ -97,7 +97,7 @@ function rgbToHsl(r, g, b) {
  * @param {HTMLElement} card — L'élément .recipe-card
  * @param {string} imageUrl — L'URL de l'image
  */
-async function applyDominantColorToCard(card, imageUrl) {
+export async function applyDominantColorToCard(card, imageUrl) {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -126,7 +126,7 @@ async function applyDominantColorToCard(card, imageUrl) {
 /**
  * Applique la couleur dominante sur toutes les cartes visibles dans la grille.
  */
-async function applyDominantColorsToGrid() {
+export async function applyDominantColorsToGrid() {
   const cards = document.querySelectorAll('.recipe-card[data-id]');
   const promises = [];
 
@@ -145,7 +145,7 @@ async function applyDominantColorsToGrid() {
  * Définit --modal-dominant-r/g/b sur l'élément .modal
  * @param {string} imageUrl — L'URL de l'image de la recette
  */
-async function applyDominantColorToModal(imageUrl) {
+export async function applyDominantColorToModal(imageUrl) {
   const modal = document.getElementById('modal');
   if (!modal || !imageUrl) return;
 

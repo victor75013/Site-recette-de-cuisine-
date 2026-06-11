@@ -31,7 +31,7 @@ db.enablePersistence().catch(function(err) {
 const auth = firebase.auth();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-let currentUser = null;
+export let currentUser = null;
 
 // Auth Listeners
 auth.onAuthStateChanged(async user => {
@@ -73,11 +73,11 @@ auth.onAuthStateChanged(async user => {
   }
 });
 
-function loginWithGoogle() {
+export function loginWithGoogle() {
   return auth.signInWithPopup(googleProvider);
 }
 
-function logout() {
+export function logout() {
   return auth.signOut();
 }
 
@@ -85,7 +85,7 @@ function logout() {
 
 let cachedRecipes = [];
 
-async function fetchRecipesFromDB() {
+export async function fetchRecipesFromDB() {
   try {
     const snapshot = await db.collection('recipes').get();
     cachedRecipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -102,19 +102,19 @@ async function fetchRecipesFromDB() {
   }
 }
 
-async function getAllRecipes() {
+export async function getAllRecipes() {
   if (cachedRecipes.length === 0) {
     await fetchRecipesFromDB();
   }
   return cachedRecipes;
 }
 
-async function getRecipeById(id) {
+export async function getRecipeById(id) {
   const recipes = await getAllRecipes();
   return recipes.find(r => r.id === id);
 }
 
-async function saveRecipe(recipe) {
+export async function saveRecipe(recipe) {
   if (!currentUser) throw new Error("Vous devez être connecté pour enregistrer une recette.");
   
   const now = new Date().toISOString();
@@ -139,41 +139,41 @@ async function saveRecipe(recipe) {
   return recipe;
 }
 
-async function deleteRecipe(id) {
+export async function deleteRecipe(id) {
   if (!currentUser) throw new Error("Vous devez être connecté pour supprimer une recette.");
   await db.collection('recipes').doc(id).delete();
   await fetchRecipesFromDB();
 }
 
-function generateId() {
+export function generateId() {
   // Plus utile avec Firestore qui génère les IDs, mais on le garde par sécurité
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
 // ---------- PARAMÈTRES (Local) ----------
 
-function getSettings() {
+export function getSettings() {
   try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; }
 }
 
-function saveSettings(settings) {
+export function saveSettings(settings) {
   const current = getSettings();
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...current, ...settings }));
 }
 
 // ---------- SITES PERSONNALISÉS (Local) ----------
 
-function getCustomSites() {
+export function getCustomSites() {
   try { return JSON.parse(localStorage.getItem(SITES_KEY)) || []; } catch { return []; }
 }
 
-function addCustomSite(site) {
+export function addCustomSite(site) {
   const sites = getCustomSites();
   sites.push(site);
   localStorage.setItem(SITES_KEY, JSON.stringify(sites));
 }
 
-function deleteCustomSite(id) {
+export function deleteCustomSite(id) {
   const sites = getCustomSites().filter(s => s.id !== id);
   localStorage.setItem(SITES_KEY, JSON.stringify(sites));
 }

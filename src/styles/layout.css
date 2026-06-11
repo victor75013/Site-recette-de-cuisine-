@@ -8,7 +8,8 @@
 /* STRUCTURE PRINCIPALE */
 body {
   margin: 0;
-  overflow: hidden; /* Empêche le scroll du body, on scrollera dans .main-content */
+  overflow: hidden;
+  /* Empêche le scroll du body, on scrollera dans .main-content */
 }
 
 .app-layout {
@@ -23,14 +24,15 @@ body {
    ========================================================================== */
 .sidebar {
   width: var(--sidebar-width);
-  margin: 24px 0 24px 24px; /* Flottante à gauche */
+  margin: 24px 0 24px 24px;
+  /* Flottante à gauche */
   border-radius: 30px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08);
-  
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -53,9 +55,18 @@ body {
 }
 
 @keyframes sidebarBounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.01); } /* Très subtil (1% d'agrandissement) */
-  100% { transform: scale(1); }
+  0% {
+    scale: 1;
+  }
+
+  40% {
+    scale: 1.01;
+  }
+
+  /* Très subtil (1% d'agrandissement) */
+  100% {
+    scale: 1;
+  }
 }
 
 /* SECTIONS DE LA SIDEBAR */
@@ -84,7 +95,8 @@ body {
   align-items: center;
   gap: 16px;
   width: 100%;
-  padding-left: 21px; /* Centré par rapport à l'icône de 38px dans 80px (80-38)/2 */
+  padding-left: 21px;
+  /* Centré par rapport à l'icône de 38px dans 80px (80-38)/2 */
   white-space: nowrap;
 }
 
@@ -116,14 +128,14 @@ body {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  position: relative; /* Nécessaire pour positionner la bulle flottante */
+  position: relative;
+  /* Nécessaire pour positionner la bulle flottante */
 }
 
-/* LA BULLE COULISSANTE LIQUIDE (Seulement sur PC) */
+/* LA BULLE COULISSANTE LIQUIDE (Universelle PC & Mobile) */
 .liquid-bubble {
   position: absolute;
-  left: 12px;
-  width: calc(100% - 24px);
+  /* Top, Left, Width et Height sont injectés par React */
   border-radius: 16px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
@@ -131,20 +143,25 @@ body {
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   /* Animation élastique très rapide et fluide (Snappy Spring) */
-  transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              height 0.2s ease-out, 
-              opacity 0.2s ease;
-  z-index: 0; /* Passe derrière le texte */
-  pointer-events: none; /* Laisse passer les clics vers les boutons en dessous */
+  transition: top 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    left 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 0.2s ease-out,
+    height 0.2s ease-out,
+    opacity 0.2s ease;
+  z-index: 0;
+  /* Passe derrière le texte */
+  pointer-events: none;
+  /* Laisse passer les clics vers les boutons en dessous */
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  width: calc(100% - 24px);
+  width: calc(100% - 40px);
   margin: 0 12px;
-  padding: 12px 16px; /* Centre parfaitement l'icône à 40px */
+  padding: 12px 16px;
+  /* Centre parfaitement l'icône à 40px */
   border: 1px solid transparent;
   border-radius: 16px;
   background: transparent;
@@ -156,12 +173,14 @@ body {
   position: relative;
   transition: all var(--transition);
   text-decoration: none;
-  z-index: 1; /* Reste au-dessus de la bulle */
+  z-index: 1;
+  /* Reste au-dessus de la bulle */
 }
 
 .nav-item:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.05); /* Léger effet de survol */
+  background: rgba(255, 255, 255, 0.05);
+  /* Léger effet de survol */
 }
 
 /* On enlève le fond statique, c'est la bulle qui gère maintenant */
@@ -213,7 +232,8 @@ body {
   gap: 12px;
   padding: 8px;
   border-radius: 20px;
-  width: 44px; /* Taille cercle par défaut */
+  width: 44px;
+  /* Taille cercle par défaut */
   height: 44px;
   overflow: hidden;
   transition: width var(--nav-transition), background var(--transition);
@@ -221,7 +241,8 @@ body {
 }
 
 .sidebar:hover .btn--auth {
-  width: 80%; /* S'élargit */
+  width: 80%;
+  /* S'élargit */
   padding-left: 12px;
   border-radius: 12px;
   transition-delay: 0.15s;
@@ -308,7 +329,8 @@ body {
    ========================================================================== */
 @media(max-width: 768px) {
   body {
-    overflow: auto; /* Restaure le scroll global sur mobile */
+    overflow: auto;
+    /* Restaure le scroll global sur mobile */
   }
 
   .app-layout {
@@ -318,36 +340,44 @@ body {
 
   .main-content {
     padding: 20px 16px;
-    padding-bottom: 100px; /* Espace pour la bottom bar */
+    padding-bottom: 100px;
+    /* Espace pour la bottom bar */
     overflow-y: visible;
   }
 
   .sidebar {
-    /* Transforme la sidebar en bottom bar */
+    /* La Barre style "Dock macOS" demandée : on part du centre ! */
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100% !important;
+    bottom: 16px;
+    left: 50%;
+    /* On accroche le point de départ au milieu exact de l'écran */
+    transform: translateX(-50%);
+    /* On décale de la moitié de sa propre taille pour centrer parfaitement */
+
+    width: max-content !important;
+    /* La barre "moule" exactement le contenu, elle s'étire du centre vers l'extérieur */
+    min-width: 280px;
+    /* Une taille minimale de sécurité */
+    max-width: calc(100% - 12px);
+    /* Sécurité pour ne jamais déborder sur les très petits écrans */
+
     height: 65px;
     margin: 0;
-    border-radius: 0;
-    border-top: 1px solid var(--glass-border);
-    border-bottom: none;
-    border-left: none;
-    border-right: none;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
     flex-direction: row;
-    padding: 0 16px;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding: 0 8px;
     z-index: 999;
   }
 
   .sidebar:hover {
-    width: 100% !important; /* Désactive l'expansion */
+    width: 100% !important;
+    /* Désactive l'expansion */
   }
 
   /* Cache le logo et l'authentification sur la barre mobile pour gagner de la place */
-  .sidebar-top, .sidebar-bottom {
+  .sidebar-top,
+  .sidebar-bottom {
     display: none;
   }
 
@@ -359,24 +389,30 @@ body {
 
   .nav-menu {
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: center;
+    /* Centre les éléments dans la barre */
     align-items: center;
-  }
-
-  /* Pas de bulle coulissante sur mobile, elle prendrait trop de place visuellement */
-  .liquid-bubble {
-    display: none !important;
+    gap: 4px;
+    /* Un petit espace constant entre les boutons */
+    width: 100%;
   }
 
   .nav-item {
+    flex: 1 1 45px;
+    /* Taille idéale 45px, mais a le droit de rétrécir si besoin */
+    max-width: 55px;
+    height: 48px;
+    /* On donne une hauteur fixe pour créer des boutons bien proportionnés */
     width: auto;
     margin: 0;
-    padding: 8px;
+    padding: 0;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     gap: 0;
     border: none;
-    border-radius: 0;
+    border-radius: 50%;
+    /* La bulle liquide épousera cette forme ! (cercle parfait) */
     background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
@@ -389,20 +425,5 @@ body {
 
   .nav-icon {
     font-size: 1.5rem;
-  }
-
-  /* Indicateur Actif Mobile (point sous l'icône) */
-  .nav-item.active::before {
-    display: block;
-    content: '';
-    position: absolute;
-    top: auto;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--primary);
   }
 }

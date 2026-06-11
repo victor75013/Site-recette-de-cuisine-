@@ -25,8 +25,10 @@ export default function Navigation() {
         if (activeItem) {
           setBubbleStyle({
             top: activeItem.offsetTop,
+            left: activeItem.offsetLeft,
+            width: activeItem.offsetWidth,
             height: activeItem.offsetHeight,
-            opacity: window.innerWidth > 768 ? 1 : 0 // Visible uniquement sur PC
+            opacity: 1 // Toujours visible, même sur mobile
           });
         }
       }
@@ -57,9 +59,11 @@ export default function Navigation() {
   return (
     <nav className="nav-menu" ref={navRef} onClick={triggerSidebarBounce}>
       
-      {/* BULLE COULISSANTE LIQUIDE */}
+      {/* BULLE COULISSANTE LIQUIDE (Universelle PC & Mobile) */}
       <div className="liquid-bubble" style={{ 
         top: `${bubbleStyle.top}px`, 
+        left: `${bubbleStyle.left}px`,
+        width: `${bubbleStyle.width}px`,
         height: `${bubbleStyle.height}px`,
         opacity: bubbleStyle.opacity 
       }} />

@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navigation from './components/Navigation';
+import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import AddEdit from './pages/AddEdit';
 import Sites from './pages/Sites';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
-import { onAuthChange, loginWithGoogle, logout } from './core/data';
-import { LogIn, LogOut } from 'lucide-react';
 
 function ToastContainer() {
-  const [toasts, setToasts] = useState([]);
+  const [toasts, React_useState] = React.useState([]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleToast = (e) => {
       const newToast = { id: Date.now(), ...e.detail };
-      setToasts(prev => [...prev, newToast]);
+      React_useState(prev => [...prev, newToast]);
       setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== newToast.id));
+        React_useState(prev => prev.filter(t => t.id !== newToast.id));
       }, newToast.duration || 3500);
     };
 
@@ -39,53 +37,12 @@ function ToastContainer() {
 }
 
 export default function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthChange((user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
   return (
     <Router>
       <div className="app-layout">
         
-        {/* BARRE LATÉRALE (Desktop) / BARRE DU BAS (Mobile) */}
-        <aside className="sidebar">
-          
-          <div className="sidebar-top">
-            <div className="brand">
-              <img src="/assets/icons/icon-512.png" alt="Logo" className="brand-icon" />
-              <span className="brand-name">Carnet de Recettes</span>
-            </div>
-          </div>
-
-          <div className="sidebar-middle">
-            <Navigation />
-          </div>
-
-          <div className="sidebar-bottom">
-            <div className="auth-section">
-              {!user ? (
-                <button className="btn btn--sm btn--auth" onClick={loginWithGoogle}>
-                  <LogIn className="auth-icon" size={22} strokeWidth={2.5} />
-                  <span className="auth-text">Connexion</span>
-                </button>
-              ) : (
-                <div className="auth-user">
-                  <img src={user.photoURL || ''} alt="Avatar" className="auth-avatar" />
-                  <button className="btn btn--sm btn--danger btn--auth" onClick={logout}>
-                    <LogOut className="auth-icon" size={22} strokeWidth={2.5} />
-                    <span className="auth-text">Quitter</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-        </aside>
+        {/* COMPOSANT ENCAPSULÉ : gère tout ce qui touche à la barre de navigation (design, auth, scroll) */}
+        <Sidebar />
 
         {/* CONTENU PRINCIPAL */}
         <main className="main-content">

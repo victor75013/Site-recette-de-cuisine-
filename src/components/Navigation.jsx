@@ -13,34 +13,75 @@ export default function Navigation() {
     localStorage.setItem('theme', newTheme);
   };
 
-  const [bubbleStyle, setBubbleStyle] = useState({ top: 0, height: 0, opacity: 0 });
+  const bubbleRef = useRef({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
+  const [bubbleStyle, setBubbleStyle] = useState(bubbleRef.current);
   const navRef = useRef(null);
   const location = useLocation();
 
+  const applyStyle = (style) => {
+    bubbleRef.current = style;
+    setBubbleStyle(style);
+  };
+
   useEffect(() => {
     // On attend un court instant que React Router ajoute la classe .active au nouveau lien
-    const updateBubble = () => {
+    const updateBubble = (isResize = false) => {
       if (navRef.current) {
         const activeItem = navRef.current.querySelector('.nav-item.active');
         if (activeItem) {
-          setBubbleStyle({
-            top: activeItem.offsetTop,
-            left: activeItem.offsetLeft,
-            width: activeItem.offsetWidth,
-            height: activeItem.offsetHeight,
-            opacity: 1 // Toujours visible, même sur mobile
-          });
+          const newTop = activeItem.offsetTop;
+          const newLeft = activeItem.offsetLeft;
+          const newWidth = activeItem.offsetWidth;
+          const newHeight = activeItem.offsetHeight;
+          const prev = bubbleRef.current;
+
+          // Si on redimensionne l'écran ou initialisation, pas d'animation de vitesse
+          if (isResize || prev.opacity === 0) {
+            applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
+            return;
+          }
+
+          const isMobile = window.innerWidth <= 768;
+          const distanceX = Math.abs(newLeft - prev.left);
+          const distanceY = Math.abs(newTop - prev.top);
+
+          // S'il y a un vrai déplacement (Desktop = Y, Mobile = X)
+          if ((isMobile && distanceX > 0) || (!isMobile && distanceY > 0)) {
+            // SQUASH & STRETCH PHYSICS :
+            // Plus la distance parcourue est grande, plus l'étirement est fort (max 16px de déformation)
+            const squashY = isMobile ? Math.min(distanceX / 12, 16) : 0; // S'écrase en hauteur sur mobile
+            const squashX = !isMobile ? Math.min(distanceY / 12, 16) : 0; // S'écrase en largeur sur PC
+
+            // On lance le déplacement avec la forme écrasée (vitesse)
+            applyStyle({
+              top: newTop + (squashY / 2),
+              left: newLeft + (squashX / 2),
+              width: newWidth - squashX + (isMobile ? squashY : 0), // S'étire dans le sens du mouvement
+              height: newHeight - squashY + (!isMobile ? squashX : 0), // S'écrase dans l'autre sens
+              opacity: 1
+            });
+
+            // Au milieu du vol (250ms pour une animation de 500ms), on lui dit de reprendre sa forme normale pour créer le rebond
+            setTimeout(() => {
+              applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
+            }, 250);
+            
+          } else {
+            applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
+          }
         }
       }
     };
     
     // Léger délai pour s'assurer que le DOM est à jour
-    const timeout = setTimeout(updateBubble, 10);
-    window.addEventListener('resize', updateBubble);
+    const timeout = setTimeout(() => updateBubble(false), 10);
+    const handleResize = () => updateBubble(true);
+
+    window.addEventListener('resize', handleResize);
     
     return () => {
       clearTimeout(timeout);
-      window.removeEventListener('resize', updateBubble);
+      window.removeEventListener('resize', handleResize);
     };
   }, [location.pathname]);
 

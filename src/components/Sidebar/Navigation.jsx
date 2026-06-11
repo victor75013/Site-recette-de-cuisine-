@@ -82,11 +82,25 @@ export default function Navigation() {
     }
   };
 
-  // Quand la route change → animation de la bulle
+  // Quand la route change → animation de la bulle et de la nouvelle icône/texte
   useEffect(() => {
     // 50ms de délai : laisse le GPU initialiser le layer de la sidebar (unshrink)
-    // avant de lancer l'animation de la bulle. Les deux tournent alors en parallèle !
-    const t1 = setTimeout(() => recalcBubble(true), 50);
+    const t1 = setTimeout(() => {
+      recalcBubble(true);
+      
+      // On anime l'icône et le texte de la NOUVELLE page active juste après le re-rendu de React
+      const activeIcon = navRef.current?.querySelector('.nav-item.active .nav-icon');
+      if (activeIcon) {
+        activeIcon.classList.remove('icon-bounce');
+        setTimeout(() => activeIcon.classList.add('icon-bounce'), 10);
+      }
+
+      const activeText = navRef.current?.querySelector('.nav-item.active .nav-text');
+      if (activeText) {
+        activeText.classList.remove('text-bounce');
+        setTimeout(() => activeText.classList.add('text-bounce'), 10);
+      }
+    }, 50);
 
     const handleResize = () => recalcBubble(false);
     window.addEventListener('resize', handleResize);
@@ -96,6 +110,39 @@ export default function Navigation() {
       window.removeEventListener('resize', handleResize);
     };
   }, [location.pathname]);
+
+  // ─── ANIMATION AU CLIC ────────────────────────────────────────
+  const handleItemClick = (e, isLink = true) => {
+    const isAlreadyActive = isLink && e.currentTarget.classList.contains('active');
+
+    if (isAlreadyActive) {
+      e.preventDefault();
+      // Comportement standard iOS/Android/Desktop : un clic sur l'onglet actif remonte en haut de page
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if (!isLink || isAlreadyActive) {
+      const icon = e.currentTarget.querySelector('.nav-icon');
+      if (icon) {
+        icon.classList.remove('icon-bounce');
+        setTimeout(() => icon.classList.add('icon-bounce'), 10);
+      }
+
+      const text = e.currentTarget.querySelector('.nav-text');
+      if (text) {
+        text.classList.remove('text-bounce');
+        setTimeout(() => text.classList.add('text-bounce'), 10);
+      }
+    }
+
+    if (isAlreadyActive) {
+      const bubble = navRef.current.querySelector('.liquid-bubble');
+      if (bubble) {
+        bubble.classList.remove('bubble-bounce');
+        setTimeout(() => bubble.classList.add('bubble-bounce'), 10);
+      }
+    }
+  };
 
   return (
     <nav className="nav-menu" ref={navRef}>
@@ -109,32 +156,32 @@ export default function Navigation() {
         opacity: bubbleStyle.opacity 
       }} />
       
-      <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <BookOpen className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Recettes</span>
       </NavLink>
 
-      <NavLink to="/add" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/add" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <PenLine className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Ajouter</span>
       </NavLink>
 
-      <NavLink to="/import" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/import" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <Link className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Importer</span>
       </NavLink>
 
-      <NavLink to="/sites" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/sites" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <Globe className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Sites</span>
       </NavLink>
 
-      <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <NavLink to="/settings" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <Settings className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Réglages</span>
       </NavLink>
 
-      <button className="nav-item theme-btn" onClick={toggleTheme} title="Changer de thème">
+      <button className="nav-item theme-btn" onClick={(e) => { handleItemClick(e, false); toggleTheme(); }} title="Changer de thème">
         <Moon className="nav-icon" size={22} strokeWidth={2.5} />
         <span className="nav-text">Thème</span>
       </button>

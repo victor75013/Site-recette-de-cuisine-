@@ -366,7 +366,7 @@ body {
     border-radius: 999px;
     border: 1px solid var(--glass-border);
     flex-direction: row;
-    padding: 0 8px;
+    padding: 0 4px; /* On réduit le padding à 4px pour que la bulle frôle les bords gauche/droite */
     z-index: 999;
   }
 
@@ -387,22 +387,27 @@ body {
     align-items: center;
   }
 
+  /* La bulle liquide prend la forme "Pillule" pour matcher avec la barre globale */
+  .liquid-bubble {
+    border-radius: 999px !important;
+  }
+
   .nav-menu {
     flex-direction: row;
     justify-content: center;
     /* Centre les éléments dans la barre */
     align-items: center;
-    gap: 4px;
-    /* Un petit espace constant entre les boutons */
+    gap: 0;
+    /* Plus aucun espace "en dur". Les cases se touchent pour calculer l'espace maximum ! */
     width: 100%;
   }
 
   .nav-item {
-    flex: 1 1 45px;
-    /* Taille idéale 45px, mais a le droit de rétrécir si besoin */
-    max-width: 55px;
-    height: 48px;
-    /* On donne une hauteur fixe pour créer des boutons bien proportionnés */
+    flex: 1 1 auto;
+    /* Rempli 100% de l'espace automatiquement en fonction du nombre d'onglets ! */
+    max-width: 85px; /* Permet à la bulle de devenir beaucoup plus large sur les grands écrans */
+    height: 57px;
+    /* La barre fait 65px. Avec 57px, il reste exactement 4px en haut et en bas. La bulle "touche" presque les parois ! */
     width: auto;
     margin: 0;
     padding: 0;
@@ -411,8 +416,8 @@ body {
     align-items: center;
     gap: 0;
     border: none;
-    border-radius: 50%;
-    /* La bulle liquide épousera cette forme ! (cercle parfait) */
+    border-radius: 999px;
+    /* La bulle liquide épousera cette forme ! */
     background: transparent !important;
     box-shadow: none !important;
     backdrop-filter: none !important;

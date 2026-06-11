@@ -49,52 +49,58 @@ export default function App() {
 
   return (
     <Router>
-      <header className="header">
-        <div className="header-inner">
-          <div className="brand">
-            <img src="/assets/icons/icon-512.png" alt="Logo" className="brand-icon" style={{width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover'}} />
-            <span className="brand-name">Carnet de Recettes</span>
+      <div className="app-layout">
+        
+        {/* BARRE LATÉRALE (Desktop) / BARRE DU BAS (Mobile) */}
+        <aside className="sidebar">
+          
+          <div className="sidebar-top">
+            <div className="brand">
+              <img src="/assets/icons/icon-512.png" alt="Logo" className="brand-icon" />
+              <span className="brand-name">Carnet de Recettes</span>
+            </div>
           </div>
-          <div style={{display: 'flex', alignItems: 'center', gap: '20px'}}>
+
+          <div className="sidebar-middle">
             <Navigation />
+          </div>
+
+          <div className="sidebar-bottom">
             <div className="auth-section">
               {!user ? (
-                <button 
-                  className="btn btn--sm" 
-                  onClick={loginWithGoogle}
-                  style={{background:'var(--primary-glow)',color:'var(--primary)',border:'1px solid rgba(249,115,22,0.4)',fontWeight:'800'}}
-                >
-                  Se connecter
+                <button className="btn btn--sm btn--auth" onClick={loginWithGoogle}>
+                  <span className="auth-icon">🔑</span>
+                  <span className="auth-text">Connexion</span>
                 </button>
               ) : (
-                <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-                  <img 
-                    src={user.photoURL || ''} 
-                    alt="Avatar"
-                    style={{width:'36px',height:'36px',borderRadius:'50%',border:'2px solid var(--primary)',objectFit:'cover',boxShadow:'0 2px 8px rgba(249,115,22,0.3)'}} 
-                  />
-                  <button className="btn btn--sm btn--danger" onClick={logout} style={{padding:'6px 12px',fontSize:'0.75rem'}}>
-                    Quitter
+                <div className="auth-user">
+                  <img src={user.photoURL || ''} alt="Avatar" className="auth-avatar" />
+                  <button className="btn btn--sm btn--danger btn--auth" onClick={logout}>
+                    <span className="auth-icon">🚪</span>
+                    <span className="auth-text">Quitter</span>
                   </button>
                 </div>
               )}
             </div>
           </div>
-        </div>
-      </header>
 
-      <main className="main">
-        <div id="app">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/add" element={<AddEdit />} />
-            <Route path="/edit/:id" element={<AddEdit />} />
-            <Route path="/sites" element={<Sites />} />
-            <Route path="/import" element={<Import />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </div>
-      </main>
+        </aside>
+
+        {/* CONTENU PRINCIPAL */}
+        <main className="main-content">
+          <div id="app">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/add" element={<AddEdit />} />
+              <Route path="/edit/:id" element={<AddEdit />} />
+              <Route path="/sites" element={<Sites />} />
+              <Route path="/import" element={<Import />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </div>
+        </main>
+
+      </div>
       
       <ToastContainer />
     </Router>

@@ -62,7 +62,7 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px; /* Ajusté pour cacher le texte derrière le bord à 80px */
   width: 100%;
   padding-left: 21px;
   white-space: nowrap;
@@ -85,9 +85,7 @@
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--text);
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: opacity var(--nav-transition), transform var(--nav-transition);
+  /* Le texte est toujours là, il sera dévoilé naturellement par l'élargissement de la sidebar (overflow: hidden) */
 }
 
 /* ─── MENU & BOUTONS ───────────────────────────────────────────── */
@@ -168,7 +166,7 @@
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 32px; /* Ajusté pour cacher le texte derrière le bord */
   width: calc(100% - 8px);
   margin: 0 4px;
   padding: 12px 24px;
@@ -209,18 +207,7 @@
 }
 
 .nav-text {
-  opacity: 0;
-  transform: translateX(-10px);
-  transition: opacity var(--nav-transition), transform var(--nav-transition);
-}
-
-/* ─── RÉVÉLATION AU SURVOL ─────────────────────────────────────── */
-.sidebar:hover .brand-name,
-.sidebar:hover .nav-text,
-.sidebar:hover .auth-text {
-  opacity: 1;
-  transform: translateX(0);
-  transition-delay: 0.15s;
+  /* Le texte est toujours visible, il se découvre au masque via l'élargissement de la sidebar */
 }
 
 /* ─── AUTHENTIFICATION ─────────────────────────────────────────── */
@@ -234,7 +221,7 @@
 .btn--auth {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 32px; /* Ajusté pour cacher le texte */
   padding: 8px;
   border-radius: 20px;
   width: 44px;
@@ -267,10 +254,6 @@
   margin-left: 4px;
 }
 
-.auth-text {
-  opacity: 0;
-  transition: opacity var(--nav-transition);
-}
 
 .auth-user {
   display: flex;

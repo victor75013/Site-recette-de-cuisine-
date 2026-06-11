@@ -154,14 +154,22 @@ body {
   /* Laisse passer les clics vers les boutons en dessous */
 }
 
+@media (min-width: 769px) {
+  /* Sur ordinateur, on ancre la bulle aux extrémités (CSS natif) pour s'étendre en temps réel avec la sidebar */
+  .liquid-bubble {
+    left: 4px !important;
+    width: calc(100% - 8px) !important;
+  }
+}
+
 .nav-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  width: calc(100% - 40px);
-  margin: 0 12px;
-  padding: 12px 16px;
-  /* Centre parfaitement l'icône à 40px */
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  padding: 12px 24px;
+  /* Centre parfaitement l'icône dans la bulle */
   border: 1px solid transparent;
   border-radius: 16px;
   background: transparent;

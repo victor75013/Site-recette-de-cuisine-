@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // RÈGLES POUR LES PROFILS UTILISATEURS
+    match /users/{userId} {
+      // Tout le monde peut voir un profil
+      allow read: if true;
+      // Seul l'utilisateur (ou l'admin) peut modifier son profil
+      allow write: if request.auth != null && (request.auth.uid == userId || request.auth.token.admin == true);
+      
+      // RÈGLES POUR LES RECETTES SAUVEGARDÉES (Mon Carnet)
+      match /saved_recipes/{recipeId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // RÈGLES POUR LES RECETTES
+    match /recipes/{recipeId} {
+      // Lecture : on peut lire si on est l'auteur, ou si la recette est publique, ou si on est admin
+      allow read: if (resource == null) || (resource.data.isPublic == true) || (request.auth != null && resource.data.createdBy == request.auth.uid) || (request.auth != null && request.auth.token.admin == true);
+      
+      // Création : n'importe quel utilisateur connecté peut créer une recette
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      
+      // Modification/Suppression : Seul l'auteur ou l'admin
+      // Note: On autorise aussi la mise à jour des compteurs likesCount/commentsCount (gérés par transaction)
+      allow update: if request.auth != null && (resource.data.createdBy == request.auth.uid || request.auth.token.admin == true || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'commentsCount']));
+      allow delete: if request.auth != null && (resource.data.createdBy == request.auth.uid || request.auth.token.admin == true);
+
+      // RÈGLES POUR LES LIKES
+      match /likes/{userId} {
+        // Tout le monde peut voir les likes
+        allow read: if true;
+        // Seul l'utilisateur peut ajouter/retirer son propre like
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // RÈGLES POUR LES COMMENTAIRES
+      match /comments/{commentId} {
+        // Tout le monde peut voir les commentaires
+        allow read: if true;
+        // N'importe qui peut commenter
+        allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+        // Seul l'auteur du commentaire ou l'admin de l'app ou l'auteur de la recette peut supprimer le commentaire
+        allow update, delete: if request.auth != null && (resource.data.authorId == request.auth.uid || request.auth.token.admin == true || get(/databases/$(database)/documents/recipes/$(recipeId)).data.createdBy == request.auth.uid);
+      }
+    }
+  }
+}

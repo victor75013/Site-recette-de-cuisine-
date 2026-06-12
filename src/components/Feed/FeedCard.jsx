@@ -62,30 +62,11 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
     : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
 
   return (
-    <article className="feed-card" onClick={onOpenRecipe}>
-      {/* ─── EN-TÊTE DU POST ─── */}
-      <div className="feed-header">
-        <div className="feed-author-info">
-          <img 
-            src={authorPhoto} 
-            alt="Avatar" 
-            className="feed-avatar" 
-          />
-          <div className="feed-author-text">
-            <span className="feed-author-name">{authorName}</span>
-            <span className="feed-date">{dateStr}</span>
-          </div>
-        </div>
-        <button className="btn-icon" onClick={(e) => { e.stopPropagation(); /* Options menu */ }}>
-          <MoreHorizontal size={20} />
-        </button>
-      </div>
-
-      {/* ─── IMAGE (Format 4:5) ─── */}
+    <article className="feed-card netflix-style" onClick={onOpenRecipe}>
       <div className="feed-image-container" onDoubleClick={handleLike}>
         {(!recipe.imageUrl || imgError) ? (
           <div className="feed-image-placeholder">
-            <ImageOff size={48} color="var(--text-muted)" style={{ opacity: 0.5 }} />
+            <ImageOff size={48} color="rgba(255, 255, 255, 0.4)" />
           </div>
         ) : (
           <img 
@@ -96,44 +77,50 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
             onError={() => setImgError(true)} 
           />
         )}
+        
+        {/* Dégradé pour lisibilité du texte (Netflix UI) */}
+        <div className="feed-overlay-gradient"></div>
+
+        {/* Contenu textuel superposé */}
+        <div className="feed-overlay-content">
+          <h2 className="feed-netflix-title">{recipe.title}</h2>
+          
+          <div className="feed-netflix-meta">
+            <img src={authorPhoto} alt="Avatar" className="feed-netflix-avatar" />
+            <div className="feed-netflix-author-info">
+              <span className="feed-netflix-author">{authorName}</span>
+              <span className="feed-netflix-date">{dateStr}</span>
+            </div>
+            {/* Options */}
+            <button className="btn-icon netflix-more" onClick={(e) => { e.stopPropagation(); }}>
+              <MoreHorizontal size={20} color="rgba(255,255,255,0.7)" />
+            </button>
+          </div>
+          
+          <div className="feed-netflix-actions">
+            <div className="feed-actions-left">
+              <button className={`btn-action netflix-btn ${liked ? 'liked' : ''}`} onClick={handleLike}>
+                <Heart size={26} fill={liked ? '#ff3b30' : 'none'} color={liked ? '#ff3b30' : 'white'} />
+                {likesCount > 0 && <span className="action-count">{likesCount}</span>}
+              </button>
+              <button className="btn-action netflix-btn" onClick={onOpenRecipe}>
+                <MessageCircle size={26} color="white" />
+                {recipe.commentsCount > 0 && <span className="action-count">{recipe.commentsCount}</span>}
+              </button>
+              <button className="btn-action netflix-btn">
+                <Share2 size={26} color="white" />
+              </button>
+            </div>
+            <button className={`btn-action netflix-btn ${saved ? 'saved' : ''}`} onClick={handleSave}>
+              <Bookmark size={26} fill={saved ? 'white' : 'none'} color="white" />
+            </button>
+          </div>
+        </div>
+
         {/* Cœur géant flottant lors du double-tap */}
         {isLiking && liked && (
           <div className="feed-giant-heart">
             <Heart size={80} fill="white" color="white" />
-          </div>
-        )}
-      </div>
-
-      {/* ─── BARRE D'ACTIONS ─── */}
-      <div className="feed-actions">
-        <div className="feed-actions-left">
-          <button className={`btn-action ${liked ? 'liked' : ''}`} onClick={handleLike}>
-            <Heart size={26} fill={liked ? '#ff3b30' : 'none'} color={liked ? '#ff3b30' : 'currentColor'} />
-          </button>
-          <button className="btn-action" onClick={onOpenRecipe}>
-            <MessageCircle size={26} />
-          </button>
-          <button className="btn-action">
-            <Share2 size={26} />
-          </button>
-        </div>
-        <button className={`btn-action ${saved ? 'saved' : ''}`} onClick={handleSave}>
-          <Bookmark size={26} fill={saved ? 'currentColor' : 'none'} />
-        </button>
-      </div>
-
-      {/* ─── DÉTAILS ET DESCRIPTION ─── */}
-      <div className="feed-content">
-        <div className="feed-likes">{likesCount} {likesCount > 1 ? 'J\'aime' : 'J\'aime'}</div>
-        
-        <div className="feed-caption">
-          <span className="caption-author">{authorName}</span>
-          <span className="caption-text">{recipe.title}</span>
-        </div>
-        
-        {(recipe.commentsCount > 0) && (
-          <div className="feed-comments-link">
-            Voir les {recipe.commentsCount} commentaires
           </div>
         )}
       </div>

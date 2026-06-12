@@ -51,18 +51,27 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
   // Formater la date
   const dateStr = recipe.createdAt ? new Date(recipe.createdAt).toLocaleDateString('fr-FR', { month: 'long', day: 'numeric' }) : '';
 
+  // Gestion de la rétrocompatibilité (anciennes recettes avec `author` en tant que chaîne de caractères)
+  const authorName = typeof recipe.author === 'string' 
+    ? recipe.author 
+    : (recipe.author?.name || 'Chef Mystère');
+
+  const authorPhoto = typeof recipe.author === 'object' && recipe.author?.photoURL 
+    ? recipe.author.photoURL 
+    : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+
   return (
     <article className="feed-card" onClick={onOpenRecipe}>
       {/* ─── EN-TÊTE DU POST ─── */}
       <div className="feed-header">
         <div className="feed-author-info">
           <img 
-            src={recipe.author?.photoURL || 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (recipe.author?.name || 'Chef')} 
+            src={authorPhoto} 
             alt="Avatar" 
             className="feed-avatar" 
           />
           <div className="feed-author-text">
-            <span className="feed-author-name">{recipe.author?.name || 'Chef Mystère'}</span>
+            <span className="feed-author-name">{authorName}</span>
             <span className="feed-date">{dateStr}</span>
           </div>
         </div>
@@ -111,7 +120,7 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
         <div className="feed-likes">{likesCount} {likesCount > 1 ? 'J\'aime' : 'J\'aime'}</div>
         
         <div className="feed-caption">
-          <span className="caption-author">{recipe.author?.name || 'Chef Mystère'}</span>
+          <span className="caption-author">{authorName}</span>
           <span className="caption-text">{recipe.title}</span>
         </div>
         

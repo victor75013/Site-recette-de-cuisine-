@@ -152,7 +152,8 @@ export default function Navigation() {
       
       {/* BULLE COULISSANTE LIQUIDE */}
       <div className={`liquid-bubble ${isAnimating ? 'is-animating' : ''}`} style={{ 
-        transform: `translate3d(${bubbleStyle.left}px, ${bubbleStyle.top}px, 0)`,
+        '--bubble-x': `${bubbleStyle.left}px`,
+        '--bubble-y': `${bubbleStyle.top}px`,
         width: `${bubbleStyle.width}px`,
         height: `${bubbleStyle.height}px`,
         opacity: bubbleStyle.opacity 

@@ -116,12 +116,23 @@
     width 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
     height 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
     opacity 0.2s ease;
-  z-index: 0;
   pointer-events: none;
+  transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0);
 
   /* GPU : layer séparé pour animer indépendamment de la sidebar */
   will-change: transform, width, height, opacity;
   /* translateZ(0) géré via transform en JS */
+}
+
+@media (min-width: 769px) {
+  .liquid-bubble {
+    /* Écrase le style inline de React pour s'adapter dynamiquement à la sidebar */
+    width: calc(100% - 8px) !important;
+    /* On retire la transition de width pour qu'elle suive exactement l'expansion de la sidebar */
+    transition: transform 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
+      height 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
+      opacity 0.2s ease !important;
+  }
 }
 
 .liquid-bubble.is-animating {
@@ -134,19 +145,19 @@
 /* ─── ANIMATIONS DE RE-CLIC ────────────────────────────────────── */
 @keyframes bubbleBounce {
   0% {
-    transform: scale(1) translateZ(0);
+    transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) scale(1);
   }
 
   40% {
-    transform: scale(0.85, 1.15) translateZ(0);
+    transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) scale(0.85, 1.15);
   }
 
   60% {
-    transform: scale(1.05, 0.95) translateZ(0);
+    transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) scale(1.05, 0.95);
   }
 
   100% {
-    transform: scale(1) translateZ(0);
+    transform: translate3d(var(--bubble-x, 0), var(--bubble-y, 0), 0) scale(1);
   }
 }
 

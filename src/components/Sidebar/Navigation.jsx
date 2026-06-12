@@ -18,6 +18,7 @@ export default function Navigation() {
   const bubbleRef = useRef({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
   const bounceTimerRef = useRef(null); // Référence pour nettoyer l'animation si on clique très vite
   const [bubbleStyle, setBubbleStyle] = useState(bubbleRef.current);
+  const [isAnimating, setIsAnimating] = useState(false);
   const navRef = useRef(null);
   const location = useLocation();
 
@@ -55,6 +56,7 @@ export default function Navigation() {
 
     // S'il y a un vrai déplacement → effet squash & stretch
     if ((isMobile && distanceX > 0) || (!isMobile && distanceY > 0)) {
+      setIsAnimating(true);
       const squashY = isMobile ? Math.min(distanceX / 12, 16) : 0;
       const squashX = !isMobile ? Math.min(distanceY / 12, 16) : 0;
 
@@ -76,6 +78,7 @@ export default function Navigation() {
       // Rebond : reprise de la forme normale à mi-parcours (250ms sur 500ms)
       bounceTimerRef.current = setTimeout(() => {
         applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
+        setTimeout(() => setIsAnimating(false), 250); // Fin de l'animation totale (500ms)
       }, 250);
     } else {
       applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
@@ -148,9 +151,8 @@ export default function Navigation() {
     <nav className="nav-menu" ref={navRef}>
       
       {/* BULLE COULISSANTE LIQUIDE */}
-      <div className="liquid-bubble" style={{ 
-        top: `${bubbleStyle.top}px`, 
-        left: `${bubbleStyle.left}px`,
+      <div className={`liquid-bubble ${isAnimating ? 'is-animating' : ''}`} style={{ 
+        transform: `translate3d(${bubbleStyle.left}px, ${bubbleStyle.top}px, 0)`,
         width: `${bubbleStyle.width}px`,
         height: `${bubbleStyle.height}px`,
         opacity: bubbleStyle.opacity 

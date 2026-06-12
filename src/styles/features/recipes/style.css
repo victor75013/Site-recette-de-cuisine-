@@ -22,47 +22,20 @@
   animation: fadeSlideIn 0.5s ease both;
   min-height: 380px;
 
-  /* Fond basé sur la couleur dominante extraite */
-  background: rgb(
-    var(--card-dominant-r),
-    var(--card-dominant-g),
-    var(--card-dominant-b)
-  );
-
-  /* Ombre colorée : même teinte que le fond, effet "glow" Apple Music */
-  box-shadow:
-    0 10px 30px -10px rgba(
-      var(--card-dominant-r),
-      var(--card-dominant-g),
-      var(--card-dominant-b),
-      0.5
-    ),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+  /* Fond simplifié */
+  background: var(--surface);
+  border: 1px solid var(--border);
+  /* Ombre très légère et statique */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* ─── Quand la couleur dominante est disponible ─── */
+/* Désactivé pour performance */
 .recipe-card.has-dominant-color {
-  box-shadow:
-    0 12px 36px -8px rgba(
-      var(--card-dominant-r),
-      var(--card-dominant-g),
-      var(--card-dominant-b),
-      0.65
-    ),
-    0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .recipe-card:hover {
-  transform: scale(1.03) translateY(-6px);
-  box-shadow:
-    0 24px 50px -12px rgba(
-      var(--card-dominant-r),
-      var(--card-dominant-g),
-      var(--card-dominant-b),
-      0.75
-    ),
-    0 8px 20px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes fadeSlideIn {
@@ -81,15 +54,7 @@
 /* ─── Fond coloré dégradé : zone basse de la carte ─── */
 /* Couche 1 : dégradé couleur dominante (remplace l'ancien card-bg-blur) */
 .card-color-wash {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.0)  0%,
-    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.6) 60%,
-    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.95) 100%
-  );
+  display: none; /* Désactivé pour performance */
 }
 
 /* ─── Couche 2 : image floutée en fond (boost de saturation / couleur) ─── */
@@ -101,14 +66,7 @@
 }
 
 .card-bg-blur img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  filter: blur(40px) saturate(300%) brightness(0.85);
-  transform: scale(2.2);
-  opacity: 0.6;
-  transition: opacity 0.5s ease;
+  display: none; /* Désactivé car trop gourmand en ressources (blur 40px) */
 }
 
 /* ─── Overlay de noircissement pour lisibilité ─── */
@@ -116,12 +74,8 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.05) 0%,
-    rgba(0, 0, 0, 0.25) 50%,
-    rgba(0, 0, 0, 0.70) 100%
-  );
+  /* Dégradé unique très léger et facile à calculer */
+  background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.8) 100%);
 }
 
 /* ─── Image principale avec fondu vers le bas ─── */
@@ -130,8 +84,7 @@
   aspect-ratio: 1 / 1;
   position: relative;
   z-index: 2;
-  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  /* mask-image retiré : très coûteux en GPU */
   flex-shrink: 0;
 }
 
@@ -144,26 +97,21 @@
 }
 
 .recipe-card:hover .card-image {
-  transform: scale(1.07);
+  /* transform: scale(1.07); Désactivé pour les performances */
 }
 
 .card-image-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.3),
-    rgba(var(--card-dominant-r), var(--card-dominant-g), var(--card-dominant-b), 0.6)
-  );
+  background: var(--surface-2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 4.5rem;
-  transition: transform 0.6s ease;
 }
 
 .recipe-card:hover .card-image-placeholder {
-  transform: scale(1.08);
+  /* transform: scale(1.08); Désactivé pour les performances */
 }
 
 /* ─── Contenu texte en bas de la carte ─── */
@@ -182,9 +130,7 @@
 .card-category {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.6);
   color: white;
   border-radius: 20px;
   font-size: 0.65rem;
@@ -193,8 +139,6 @@
   letter-spacing: 0.1em;
   margin-bottom: 10px;
   width: fit-content;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-title {
@@ -204,7 +148,6 @@
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin-bottom: 8px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .card-meta {

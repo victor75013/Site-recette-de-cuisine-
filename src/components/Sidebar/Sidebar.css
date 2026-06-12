@@ -30,6 +30,7 @@
   transition: width var(--nav-transition), background-color var(--transition);
   z-index: 100;
   flex-shrink: 0;
+  contain: layout style; /* Performance: isole les recalculs de la sidebar */
 }
 
 /* Expansion au survol */
@@ -62,7 +63,8 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 24px; /* Ajusté pour cacher le texte derrière le bord à 80px */
+  gap: 24px;
+  /* Ajusté pour cacher le texte derrière le bord à 80px */
   width: 100%;
   padding-left: 21px;
   white-space: nowrap;
@@ -95,6 +97,7 @@
   gap: 12px;
   width: 100%;
   position: relative;
+  contain: layout paint style; /* Isole le reflow des boutons au sein du menu */
 }
 
 /* ─── BULLE COULISSANTE LIQUIDE ────────────────────────────────── */
@@ -106,32 +109,45 @@
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: top 0.5s cubic-bezier(0.34, 1.15, 0.64, 1), 
-              left 0.5s cubic-bezier(0.34, 1.15, 0.64, 1), 
-              width 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
-              height 0.5s cubic-bezier(0.34, 1.15, 0.64, 1), 
-              opacity 0.2s ease;
+  top: 0;
+  left: 0;
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
+    width 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
+    height 0.5s cubic-bezier(0.34, 1.15, 0.64, 1),
+    opacity 0.2s ease;
   z-index: 0;
   pointer-events: none;
 
   /* GPU : layer séparé pour animer indépendamment de la sidebar */
-  will-change: top, left, width, height;
-  transform: translateZ(0);
+  will-change: transform, width, height, opacity;
+  /* translateZ(0) géré via transform en JS */
 }
 
-@media (min-width: 769px) {
-  .liquid-bubble {
-    left: 4px !important;
-    width: calc(100% - 8px) !important;
-  }
+.liquid-bubble.is-animating {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--glass-bg-opaque, rgba(255, 255, 255, 0.15));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04); /* Ombre allégée en mouvement */
 }
 
 /* ─── ANIMATIONS DE RE-CLIC ────────────────────────────────────── */
 @keyframes bubbleBounce {
-  0% { transform: scale(1) translateZ(0); }
-  40% { transform: scale(0.85, 1.15) translateZ(0); }
-  60% { transform: scale(1.05, 0.95) translateZ(0); }
-  100% { transform: scale(1) translateZ(0); }
+  0% {
+    transform: scale(1) translateZ(0);
+  }
+
+  40% {
+    transform: scale(0.85, 1.15) translateZ(0);
+  }
+
+  60% {
+    transform: scale(1.05, 0.95) translateZ(0);
+  }
+
+  100% {
+    transform: scale(1) translateZ(0);
+  }
 }
 
 .bubble-bounce {
@@ -139,21 +155,41 @@
 }
 
 @keyframes iconBounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(0.7); }
-  60% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(0.7);
+  }
+
+  60% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .icon-bounce {
   animation: iconBounce 0.4s cubic-bezier(0.34, 1.15, 0.64, 1) !important;
-  transition: none !important; /* Désactive la transition pour laisser jouer l'animation */
+  transition: none !important;
+  /* Désactive la transition pour laisser jouer l'animation */
 }
 
 @keyframes textBounce {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .text-bounce {
@@ -166,7 +202,8 @@
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 32px; /* Ajusté pour cacher le texte derrière le bord */
+  gap: 32px;
+  /* Ajusté pour cacher le texte derrière le bord */
   width: calc(100% - 8px);
   margin: 0 4px;
   padding: 12px 24px;
@@ -206,10 +243,6 @@
   transition: transform var(--transition);
 }
 
-.nav-text {
-  /* Le texte est toujours visible, il se découvre au masque via l'élargissement de la sidebar */
-}
-
 /* ─── AUTHENTIFICATION ─────────────────────────────────────────── */
 .auth-section {
   width: 100%;
@@ -221,7 +254,8 @@
 .btn--auth {
   display: flex;
   align-items: center;
-  gap: 32px; /* Ajusté pour cacher le texte */
+  gap: 32px;
+  /* Ajusté pour cacher le texte */
   padding: 8px;
   border-radius: 20px;
   width: 44px;
@@ -285,13 +319,13 @@
     flex-direction: row;
     padding: 0 4px;
     z-index: 999;
-    
+
     transform-origin: bottom center;
     will-change: transform;
-    
+
     /* Animation fluide et accélération matérielle stricte (GPU) pour éviter tout jank */
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                background-color var(--transition);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color var(--transition);
   }
 
   .sidebar.sidebar--shrunk {
@@ -303,8 +337,8 @@
     max-width: 420px;
     /* CORRECTION CRITIQUE DE PRIORITÉ : on force le maintien de la transition sur le transform,
        sinon le hover "desktop" global écrase la transition mobile et supprime le bezier ! */
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                background-color var(--transition);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color var(--transition);
   }
 
   .sidebar-top,

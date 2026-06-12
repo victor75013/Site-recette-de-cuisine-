@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ImageOff } from 'lucide-react';
 import { toggleLike, hasUserLiked, saveRecipeToBook, currentUser } from '../../core/data';
 import './Feed.css';
 
@@ -8,6 +8,7 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
   const [likesCount, setLikesCount] = useState(recipe.likesCount || 0);
   const [saved, setSaved] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -82,12 +83,18 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
 
       {/* ─── IMAGE (Format 4:5) ─── */}
       <div className="feed-image-container" onDoubleClick={handleLike}>
-        {recipe.imageUrl ? (
-          <img src={recipe.imageUrl} alt={recipe.title} className="feed-image" loading="lazy" />
-        ) : (
+        {(!recipe.imageUrl || imgError) ? (
           <div className="feed-image-placeholder">
-            <span className="placeholder-emoji">🍲</span>
+            <ImageOff size={48} color="var(--text-muted)" style={{ opacity: 0.5 }} />
           </div>
+        ) : (
+          <img 
+            src={recipe.imageUrl} 
+            alt={recipe.title} 
+            className="feed-image" 
+            loading="lazy" 
+            onError={() => setImgError(true)} 
+          />
         )}
         {/* Cœur géant flottant lors du double-tap */}
         {isLiking && liked && (

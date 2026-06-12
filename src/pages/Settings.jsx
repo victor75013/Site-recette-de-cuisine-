@@ -130,6 +130,50 @@ export default function Settings() {
             <input type="file" ref={fileInputRef} onChange={handleImportFile} accept=".json" style={{display: 'none'}} />
             <button className="btn btn--secondary btn--sm" onClick={triggerImport}>⬆️ Importer (JSON)</button>
           </div>
+
+          <hr className="form-divider" style={{margin: '20px 0'}} />
+
+          <div className="settings-row">
+            <span className="settings-label">Actualiser les recettes importées</span>
+            <span className="settings-hint">Re-télécharge les images et informations manquantes de vos recettes importées via leur URL.</span>
+          </div>
+          <button className="btn btn--secondary btn--sm" onClick={async () => {
+            if (!currentUser) return showToast('Vous devez être connecté.', 'error');
+            try {
+              const recipes = await getAllRecipes();
+              const myImportedRecipes = recipes.filter(r => r.createdBy === currentUser.uid && r.sourceUrl && r.sourceUrl.trim() !== '');
+              if (myImportedRecipes.length === 0) return showToast('Aucune recette importée trouvée.', 'info');
+              if (!window.confirm(`Voulez-vous actualiser les données de vos ${myImportedRecipes.length} recettes importées ? (Cela peut prendre plusieurs minutes)`)) return;
+              
+              showToast(`Actualisation en cours... Veuillez patienter.`, 'info');
+              let successCount = 0;
+              for (const r of myImportedRecipes) {
+                try {
+                  const res = await fetch('http://localhost:3001/scrape', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: r.sourceUrl.trim() }),
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    await saveRecipe({
+                      ...r,
+                      title: data.title || r.title,
+                      description: data.description || r.description,
+                      imageUrl: data.image || r.imageUrl,
+                      prepTime: data.prepTime || r.prepTime,
+                      cookTime: data.cookTime || r.cookTime,
+                      servings: data.servings || r.servings,
+                      ingredients: data.ingredients?.length ? data.ingredients : r.ingredients,
+                      steps: data.instructions?.length ? data.instructions : r.steps,
+                    });
+                    successCount++;
+                  }
+                } catch (e) { console.error('Erreur', e); }
+              }
+              showToast(`${successCount}/${myImportedRecipes.length} recettes actualisées !`, 'success');
+              navigate('/');
+            } catch (err) { showToast('Erreur: ' + err.message, 'error'); }
+          }}>🔄 Actualiser les anciennes recettes</button>
           
           <hr className="form-divider" style={{margin: '20px 0'}} />
           

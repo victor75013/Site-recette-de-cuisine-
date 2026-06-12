@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Fuse from 'fuse.js';
 import { getPublicRecipes } from '../core/data';
 import FeedCard from '../components/Feed/FeedCard';
 import SmartSearchBar from '../components/SmartSearchBar/SmartSearchBar';
@@ -20,22 +21,33 @@ export default function Home() {
     });
   }, []);
 
-  const filteredRecipes = recipes.filter(r => {
-    // Search
-    const matchSearch = !search || 
-      r.title?.toLowerCase().includes(search.toLowerCase()) || 
-      r.category?.toLowerCase().includes(search.toLowerCase()) ||
-      r.author?.name?.toLowerCase().includes(search.toLowerCase());
-      
-    // Category Filter
-    const matchFilter = activeFilter === 'Tout' || 
-                        r.category === activeFilter ||
-                        (r.tags && r.tags.includes(activeFilter)) ||
-                        (activeFilter === 'Healthy' && r.title?.toLowerCase().includes('healthy')) ||
-                        (activeFilter === 'Rapide' && r.title?.toLowerCase().includes('rapide'));
-    
-    return matchSearch && matchFilter;
-  });
+  const categoryFiltered = useMemo(() => {
+    return recipes.filter(r => {
+      return activeFilter === 'Tout' || 
+             r.category === activeFilter ||
+             (r.tags && r.tags.includes(activeFilter)) ||
+             (activeFilter === 'Healthy' && r.title?.toLowerCase().includes('healthy')) ||
+             (activeFilter === 'Rapide' && r.title?.toLowerCase().includes('rapide'));
+    });
+  }, [recipes, activeFilter]);
+
+  // Cerveau de Recherche Approximative (Fuse.js)
+  const fuse = useMemo(() => {
+    return new Fuse(categoryFiltered, {
+      keys: [
+        { name: 'title', weight: 2 },
+        { name: 'author.name', weight: 1 },
+        { name: 'author', weight: 1 }, // Rétrocompatibilité si l'auteur est une simple chaîne de texte
+        { name: 'category', weight: 0.5 }
+      ],
+      threshold: 0.4, // Tolérance augmentée pour les petits mots (noms)
+      ignoreLocation: true
+    });
+  }, [categoryFiltered]);
+
+  const filteredRecipes = search 
+    ? fuse.search(search).map(result => result.item)
+    : categoryFiltered;
 
   return (
     <>

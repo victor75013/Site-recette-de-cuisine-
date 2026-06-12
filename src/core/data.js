@@ -130,7 +130,8 @@ export async function fetchRecipesFromDB() {
 export async function getPublicRecipes() {
   try {
     const snapshot = await db.collection('recipes')
-      .where('isPublic', '==', true)
+      // TEMPORAIRE : On commente le filtre pour voir les anciennes recettes privées
+      // .where('isPublic', '==', true)
       .orderBy('createdAt', 'desc')
       .limit(50)
       .get();

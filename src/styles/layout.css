@@ -88,6 +88,117 @@ body {
     /* Espace pour la bottom bar */
     overflow-y: visible;
   }
+}
 
+/* ==========================================================================
+   TOP BAR (APPLE/AIRBNB STYLE)
+   ========================================================================== */
+.home-top-bar {
+  position: sticky;
+  top: 16px; 
+  z-index: 100;
+  margin: 0 auto 32px auto;
+  max-width: 800px;
+  padding: 12px;
+  border-radius: 24px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+}
 
+.home-top-bar.hidden {
+  transform: translateY(-150%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 768px) {
+  .home-top-bar {
+    top: 24px;
+    padding: 16px 24px;
+    flex-direction: row;
+    align-items: center;
+    border-radius: 32px;
+  }
+}
+
+.home-search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 600px;
+}
+
+.home-search-wrap .search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.home-search-wrap input {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition);
+}
+
+.home-search-wrap input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-glow);
+  border-color: var(--primary);
+}
+
+.home-filter-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.home-filter-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.home-filter-chips {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 4px; /* for subtle shadow clipping */
+}
+
+.filter-chip {
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.filter-chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }

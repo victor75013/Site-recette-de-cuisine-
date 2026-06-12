@@ -1,18 +1,18 @@
 /* DESIGN TOKENS (THEME) */
 :root {
-  /* DA - couleur sombre (noir) */
-  --bg: #000000;
-  --bg-2: #0a0a0a;
-  --surface: #121212;
-  --surface-2: #1c1c1e;
+  /* Thème par défaut: LIGHT (Style Apple/Airbnb) */
+  --bg: #F2F2F7;
+  --bg-2: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
 
   /* Effet Glassmorphism */
-  --glass-bg: rgba(5, 5, 5, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.05);
   --glass-blur: blur(20px) saturate(180%);
 
   /* Borders & Accents */
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(0, 0, 0, 0.06);
   --primary: #f97316;
   --primary-dark: #ea580c;
   --primary-glow: rgba(249, 115, 22, 0.15);
@@ -20,9 +20,9 @@
   --grad: linear-gradient(135deg, #f97316, #f59e0b);
 
   /* Typography */
-  --text: #ffffff;
-  --text-muted: #a1a1aa;
-  --text-dim: #71717a;
+  --text: #000000;
+  --text-muted: #52525b;
+  --text-dim: #a1a1aa;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
   /* States */
@@ -33,27 +33,27 @@
   --radius-sm: 8px;
   --radius: 16px;
   --radius-lg: 24px;
-  --shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.9);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
   --glow: 0 0 30px rgba(249, 115, 22, 0.15);
   --transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-[data-theme="light"] {
-  --bg: #F2F2F7;
-  --bg-2: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #f4f4f5;
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg-2: #0a0a0a;
+  --surface: #121212;
+  --surface-2: #1c1c1e;
 
-  --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-bg: rgba(5, 5, 5, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  --border: rgba(0, 0, 0, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
 
-  --text: #000000;
-  --text-muted: #52525b;
-  --text-dim: #a1a1aa;
+  --text: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-dim: #71717a;
 
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+  --shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.9);
 }

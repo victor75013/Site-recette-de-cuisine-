@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { BookOpen, PenLine, Link, Globe, Settings, Moon } from 'lucide-react';
+import { useLiquidBubble } from './useLiquidBubble';
+import LiquidBubble from './LiquidBubble';
+import './Navigation.css';
 
 export default function Navigation() {
   const toggleTheme = () => {
@@ -14,150 +17,14 @@ export default function Navigation() {
     localStorage.setItem('theme', newTheme);
   };
 
-  // ─── BULLE LIQUIDE (sélectionneur) ───────────────────────────────
-  const bubbleRef = useRef({ top: 0, left: 0, width: 0, height: 0, opacity: 0 });
-  const bounceTimerRef = useRef(null); // Référence pour nettoyer l'animation si on clique très vite
-  const [bubbleStyle, setBubbleStyle] = useState(bubbleRef.current);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const navRef = useRef(null);
-  const location = useLocation();
-
-  const applyStyle = (style) => {
-    bubbleRef.current = style;
-    setBubbleStyle(style);
-  };
-
-  // Calcule la position de la bulle sur l'élément actif
-  const recalcBubble = (animate = false) => {
-    if (!navRef.current) return;
-    const activeItem = navRef.current.querySelector('.nav-item.active');
-    if (!activeItem) return;
-
-    const newTop = activeItem.offsetTop;
-    const newLeft = activeItem.offsetLeft;
-    const newWidth = activeItem.offsetWidth;
-    const newHeight = activeItem.offsetHeight;
-    const prev = bubbleRef.current;
-
-    // Nettoyage de toute animation de rebond précédente pour éviter les "téléportations" si on clique vite
-    if (bounceTimerRef.current) {
-      clearTimeout(bounceTimerRef.current);
-    }
-
-    // Pas d'animation si c'est la première apparition ou un recalcul silencieux
-    if (!animate || prev.opacity === 0) {
-      applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
-      return;
-    }
-
-    const isMobile = window.innerWidth <= 768;
-    const distanceX = Math.abs(newLeft - prev.left);
-    const distanceY = Math.abs(newTop - prev.top);
-
-    // S'il y a un vrai déplacement → effet squash & stretch
-    if ((isMobile && distanceX > 0) || (!isMobile && distanceY > 0)) {
-      setIsAnimating(true);
-      const squashY = isMobile ? Math.min(distanceX / 12, 16) : 0;
-      const squashX = !isMobile ? Math.min(distanceY / 12, 16) : 0;
-
-      // Direction du mouvement pour créer la "queue" derrière la bulle
-      const isMovingRight = newLeft > prev.left;
-      const isMovingDown = newTop > prev.top;
-
-      const adjustedLeft = newLeft - (isMovingRight && isMobile ? squashY : 0);
-      const adjustedTop = newTop - (isMovingDown && !isMobile ? squashX : 0);
-
-      applyStyle({
-        top: adjustedTop,
-        left: adjustedLeft,
-        width: newWidth - squashX + (isMobile ? squashY : 0),
-        height: newHeight - squashY + (!isMobile ? squashX : 0),
-        opacity: 1
-      });
-
-      // Rebond : reprise de la forme normale à mi-parcours (250ms sur 500ms)
-      bounceTimerRef.current = setTimeout(() => {
-        applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
-        setTimeout(() => setIsAnimating(false), 250); // Fin de l'animation totale (500ms)
-      }, 250);
-    } else {
-      applyStyle({ top: newTop, left: newLeft, width: newWidth, height: newHeight, opacity: 1 });
-    }
-  };
-
-  // Quand la route change → animation de la bulle et de la nouvelle icône/texte
-  useEffect(() => {
-    // 50ms de délai : laisse le GPU initialiser le layer de la sidebar (unshrink)
-    const t1 = setTimeout(() => {
-      recalcBubble(true);
-      
-      // On anime l'icône et le texte de la NOUVELLE page active juste après le re-rendu de React
-      const activeIcon = navRef.current?.querySelector('.nav-item.active .nav-icon');
-      if (activeIcon) {
-        activeIcon.classList.remove('icon-bounce');
-        setTimeout(() => activeIcon.classList.add('icon-bounce'), 10);
-      }
-
-      const activeText = navRef.current?.querySelector('.nav-item.active .nav-text');
-      if (activeText) {
-        activeText.classList.remove('text-bounce');
-        setTimeout(() => activeText.classList.add('text-bounce'), 10);
-      }
-    }, 50);
-
-    const handleResize = () => recalcBubble(false);
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      clearTimeout(t1);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [location.pathname]);
-
-  // ─── ANIMATION AU CLIC ────────────────────────────────────────
-  const handleItemClick = (e, isLink = true) => {
-    const isAlreadyActive = isLink && e.currentTarget.classList.contains('active');
-
-    if (isAlreadyActive) {
-      e.preventDefault();
-      // Comportement standard iOS/Android/Desktop : un clic sur l'onglet actif remonte en haut de page
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    if (!isLink || isAlreadyActive) {
-      const icon = e.currentTarget.querySelector('.nav-icon');
-      if (icon) {
-        icon.classList.remove('icon-bounce');
-        setTimeout(() => icon.classList.add('icon-bounce'), 10);
-      }
-
-      const text = e.currentTarget.querySelector('.nav-text');
-      if (text) {
-        text.classList.remove('text-bounce');
-        setTimeout(() => text.classList.add('text-bounce'), 10);
-      }
-    }
-
-    if (isAlreadyActive) {
-      const bubble = navRef.current.querySelector('.liquid-bubble');
-      if (bubble) {
-        bubble.classList.remove('bubble-bounce');
-        setTimeout(() => bubble.classList.add('bubble-bounce'), 10);
-      }
-    }
-  };
+  const navRef = React.useRef(null);
+  const { bubbleStyle, isAnimating, handleItemClick } = useLiquidBubble(navRef);
 
   return (
     <nav className="nav-menu" ref={navRef}>
       
       {/* BULLE COULISSANTE LIQUIDE */}
-      <div className={`liquid-bubble ${isAnimating ? 'is-animating' : ''}`} style={{ 
-        '--bubble-x': `${bubbleStyle.left}px`,
-        '--bubble-y': `${bubbleStyle.top}px`,
-        width: `${bubbleStyle.width}px`,
-        height: `${bubbleStyle.height}px`,
-        opacity: bubbleStyle.opacity 
-      }} />
+      <LiquidBubble bubbleStyle={bubbleStyle} isAnimating={isAnimating} />
       
       <NavLink to="/" onClick={(e) => handleItemClick(e)} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <BookOpen className="nav-icon" size={22} strokeWidth={2.5} />

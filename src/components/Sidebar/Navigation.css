@@ -1,0 +1,116 @@
+/* ─── MENU & BOUTONS ───────────────────────────────────────────── */
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  position: relative;
+  contain: layout paint style; /* Isole le reflow des boutons au sein du menu */
+}
+
+/* ─── NAV ITEMS ────────────────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  /* Ajusté pour cacher le texte derrière le bord */
+  width: calc(100% - 8px);
+  margin: 0 4px;
+  padding: 12px 24px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  transition: all var(--transition);
+  text-decoration: none;
+  z-index: 1;
+}
+
+.nav-item:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item.active {
+  color: var(--primary);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.nav-item.active::before {
+  display: none;
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+
+/* ─── ANIMATIONS D'ICONES & TEXTE ────────────────────────────────────── */
+@keyframes iconBounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.7); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.icon-bounce {
+  animation: iconBounce 0.4s cubic-bezier(0.34, 1.15, 0.64, 1) !important;
+  transition: none !important;
+}
+
+@keyframes textBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.text-bounce {
+  animation: textBounce 0.4s cubic-bezier(0.34, 1.15, 0.64, 1) !important;
+  transition: none !important;
+  transform-origin: left center;
+}
+
+/* ─── MOBILE: Adaptation Navigation ─── */
+@media(max-width: 768px) {
+  .nav-menu {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+  }
+
+  .nav-item {
+    flex: 1 1 auto;
+    max-width: 85px;
+    height: 57px;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .nav-text {
+    display: none !important;
+  }
+
+  .nav-icon {
+    font-size: 1.5rem;
+  }
+}

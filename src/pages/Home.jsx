@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPublicRecipes } from '../core/data';
 import FeedCard from '../components/Feed/FeedCard';
+import SmartSearchBar from '../components/SmartSearchBar/SmartSearchBar';
 import '../components/Feed/Feed.css';
 
 export default function Home() {
@@ -9,10 +10,6 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('Tout');
   
-  // Smart Scroll Navigation
-  const [showNav, setShowNav] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
   const FILTERS = ['Tout', 'Entrées', 'Plats principaux', 'Desserts', 'Healthy', 'Rapide'];
 
   useEffect(() => {
@@ -22,31 +19,6 @@ export default function Home() {
       setLoading(false);
     });
   }, []);
-
-  useEffect(() => {
-    const handleScroll = (e) => {
-      const currentScrollY = e.target.scrollTop !== undefined ? e.target.scrollTop : window.scrollY;
-      
-      // Si on scroll vers le bas et qu'on a dépassé 50px, on cache
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setShowNav(false);
-      } 
-      // Si on scroll vers le haut, on réaffiche
-      else if (currentScrollY < lastScrollY) {
-        setShowNav(true);
-      }
-      setLastScrollY(currentScrollY);
-    };
-
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) mainContent.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      if (mainContent) mainContent.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
 
   const filteredRecipes = recipes.filter(r => {
     // Search
@@ -67,32 +39,13 @@ export default function Home() {
 
   return (
     <>
-      <div className={`home-top-bar ${!showNav ? 'hidden' : ''}`}>
-        <div className="home-search-wrap">
-          <span className="search-icon">🔍</span>
-          <input 
-            className="search-input" 
-            type="search" 
-            placeholder="Rechercher une recette ou un chef..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        
-        <div className="home-filter-scroll">
-          <div className="home-filter-chips">
-            {FILTERS.map(f => (
-              <button 
-                key={f} 
-                className={`filter-chip ${activeFilter === f ? 'active' : ''}`}
-                onClick={() => setActiveFilter(f)}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SmartSearchBar 
+        search={search}
+        setSearch={setSearch}
+        activeFilter={activeFilter}
+        setActiveFilter={setActiveFilter}
+        filters={FILTERS}
+      />
 
       {loading ? (
         <div className="empty-state"><h3>Chargement du feed...</h3></div>

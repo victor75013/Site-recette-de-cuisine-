@@ -228,3 +228,51 @@
   50% { transform: scale(1.2); }
   100% { transform: scale(1); }
 }
+
+/* ============================================================
+   PROGRESSIVE DISCLOSURE (Option A : Minimalisme absolu)
+   ============================================================ */
+
+/* Sur Desktop : Révélation au survol */
+@media (hover: hover) {
+  /* On décale tout le conteneur de texte vers le bas pour que le titre s'affiche en bas */
+  .feed-overlay-content {
+    transform: translateY(64px); /* Correspond à la hauteur des infos cachées */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  /* Au survol, le conteneur remonte à sa place initiale */
+  .feed-card:hover .feed-overlay-content {
+    transform: translateY(0);
+  }
+
+  .feed-netflix-meta,
+  .feed-netflix-actions {
+    opacity: 0;
+    transition: opacity 0.3s ease; /* Disparition/Apparition en fondu */
+    pointer-events: none;
+  }
+
+  .feed-card:hover .feed-netflix-meta,
+  .feed-card:hover .feed-netflix-actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .feed-overlay-gradient {
+    height: 40%;
+    transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .feed-card:hover .feed-overlay-gradient {
+    height: 75%;
+  }
+
+  .feed-image {
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  .feed-card:hover .feed-image {
+    transform: scale(1.06);
+  }
+}

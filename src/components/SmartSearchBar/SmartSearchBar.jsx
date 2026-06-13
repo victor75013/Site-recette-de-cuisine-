@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SlidersHorizontal, X, Search } from 'lucide-react';
+import { SlidersHorizontal, X, Search, User } from 'lucide-react';
 import './SmartSearchBar.css';
 
 export default function SmartSearchBar({ 
@@ -41,16 +41,20 @@ export default function SmartSearchBar({
     };
   }, [lastScrollY]);
 
+  const isChefSearch = search.startsWith('@');
+
   return (
     <>
       <div className={`home-top-bar ${!showNav ? 'hidden' : ''}`}>
         <div className="home-search-wrap">
-          <div className="search-input-container">
-            <span className="search-icon"><Search size={18} /></span>
+          <div className={`search-input-container ${isChefSearch ? 'chef-mode' : ''}`}>
+            <span className="search-icon">
+              {isChefSearch ? <User size={18} className="chef-icon-anim" /> : <Search size={18} />}
+            </span>
             <input 
               className="search-input" 
               type="search" 
-              placeholder="Rechercher une recette ou un chef..." 
+              placeholder="Rechercher une recette, ou @ pour un chef..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />

@@ -31,22 +31,27 @@ export default function Home() {
     });
   }, [recipes, activeFilter]);
 
+  const isChefSearch = search.startsWith('@');
+  const actualSearchTerm = isChefSearch ? search.substring(1).trim() : search;
+
   // Cerveau de Recherche Approximative (Fuse.js)
   const fuse = useMemo(() => {
     return new Fuse(categoryFiltered, {
-      keys: [
+      keys: isChefSearch ? [
+        { name: 'author.name', weight: 2 },
+        { name: 'author', weight: 2 }
+      ] : [
         { name: 'title', weight: 2 },
-        { name: 'author.name', weight: 1 },
-        { name: 'author', weight: 1 }, // Rétrocompatibilité si l'auteur est une simple chaîne de texte
-        { name: 'category', weight: 0.5 }
+        { name: 'category', weight: 1 },
+        { name: 'tags', weight: 0.5 }
       ],
       threshold: 0.4, // Tolérance augmentée pour les petits mots (noms)
       ignoreLocation: true
     });
-  }, [categoryFiltered]);
+  }, [categoryFiltered, isChefSearch]);
 
-  const filteredRecipes = search 
-    ? fuse.search(search).map(result => result.item)
+  const filteredRecipes = actualSearchTerm 
+    ? fuse.search(actualSearchTerm).map(result => result.item)
     : categoryFiltered;
 
   return (

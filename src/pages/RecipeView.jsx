@@ -42,21 +42,25 @@ export default function RecipeView() {
 
   const totalTime = (parseInt(recipe.prepTime) || 0) + (parseInt(recipe.cookTime) || 0);
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="recipe-view-container">
       {/* BOUTON RETOUR */}
-      <button className="btn-back-absolute" onClick={() => navigate(-1)} aria-label="Retour">
+      <button className="btn-back-absolute" onClick={handleBack} aria-label="Retour">
         <ArrowLeft size={24} />
       </button>
 
-      {/* HERO SECTION (Parallaxe CSS) */}
-      <header className="recipe-hero">
+      {/* HERO SECTION (Animée) */}
+      <header className="recipe-hero animate-hero-expand">
         <div className="recipe-hero-bg">
           <img src={displayImage} alt={recipe.title} />
         </div>
         <div className="recipe-hero-gradient"></div>
         
-        <div className="recipe-hero-content">
+        <div className="recipe-hero-content animate-content-fade-up">
           <h1 className="recipe-view-title">{recipe.title}</h1>
           <div className="recipe-view-meta">
             <div className="recipe-view-meta-item">
@@ -79,8 +83,8 @@ export default function RecipeView() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <main className="recipe-main-content">
+      {/* MAIN CONTENT (Cascade décalée) */}
+      <main className="recipe-main-content animate-main-content">
         
         {/* COLONNE GAUCHE : INGRÉDIENTS */}
         <aside>

@@ -56,6 +56,8 @@ export default function Home() {
     ? fuse.search(actualSearchTerm).map(result => result.item)
     : categoryFiltered;
 
+
+
   return (
     <>
       <SmartSearchBar 

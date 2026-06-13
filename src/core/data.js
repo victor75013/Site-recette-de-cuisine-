@@ -132,10 +132,19 @@ export async function getPublicRecipes() {
     const snapshot = await db.collection('recipes')
       // TEMPORAIRE : On commente le filtre pour voir les anciennes recettes privées
       // .where('isPublic', '==', true)
-      .orderBy('createdAt', 'desc')
       .limit(50)
       .get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+    let recipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Tri local pour inclure celles qui n'ont pas de champ createdAt
+    recipes.sort((a, b) => {
+      const dA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dB - dA;
+    });
+    
+    return recipes;
   } catch (err) {
     console.error("Erreur getPublicRecipes:", err);
     return [];

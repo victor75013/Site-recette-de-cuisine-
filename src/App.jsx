@@ -14,17 +14,25 @@ function ScrollManager() {
 
   useEffect(() => {
     // 1. On signale au reste de l'app (notamment la Sidebar) qu'une transition commence.
-    // Cela permet à la Sidebar de se "verrouiller" ouverte et de désactiver l'écouteur de scroll.
     window.dispatchEvent(new Event('navigation-start'));
 
-    // 2. On laisse React finir de détruire l'ancienne page et construire la nouvelle.
-    // L'utilisation d'un timeout très court (ou double rAF) garantit que le thread principal 
-    // a le temps de respirer avant de faire le scroll, évitant le jank sur la barre.
+    // 2. Retour en haut immédiat dès que la route change
+    // Utilisation d'un setTimeout(..., 0) pour s'assurer que le navigateur a fini de calculer le nouveau DOM
+    setTimeout(() => {
+      // Pour mobile (window / body)
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      // Pour PC (.main-content)
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) mainContent.scrollTop = 0;
+    }, 0);
+
+    // 3. On libère le verrou de la Sidebar après un court délai pour la fluidité
     const timer = setTimeout(() => {
-      window.scrollTo(0, 0);
-      // 3. On libère le verrou
       window.dispatchEvent(new Event('navigation-end'));
-    }, 150); // 150ms donne largement le temps à l'appareil (même un vieux téléphone) de peindre la nouvelle page
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [location.pathname]);

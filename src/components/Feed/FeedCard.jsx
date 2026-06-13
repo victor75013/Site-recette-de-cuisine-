@@ -3,7 +3,7 @@ import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ImageOff } from
 import { toggleLike, hasUserLiked, saveRecipeToBook, currentUser } from '../../core/data';
 import './Feed.css';
 
-export default function FeedCard({ recipe, onOpenRecipe }) {
+export default function FeedCard({ recipe, onOpenRecipe, index = 0 }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(recipe.likesCount || 0);
   const [saved, setSaved] = useState(false);
@@ -62,7 +62,11 @@ export default function FeedCard({ recipe, onOpenRecipe }) {
     : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ccc"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
 
   return (
-    <article className="feed-card netflix-style" onClick={onOpenRecipe}>
+    <article 
+      className="feed-card netflix-style animate-slide-up-fade" 
+      onClick={onOpenRecipe}
+      style={{ animationDelay: `${index * 0.08}s` }}
+    >
       <div className="feed-image-container" onDoubleClick={handleLike}>
         {(!recipe.imageUrl || imgError) ? (
           <div className="feed-image-placeholder">

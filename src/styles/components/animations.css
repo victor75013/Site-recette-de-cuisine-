@@ -1,0 +1,43 @@
+/* ============================================================
+   ANIMATIONS REUTILISABLES (Global System)
+   ============================================================ */
+
+/* --- Cascade & Slide Up --- */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-fade {
+  /* État initial avant l'animation pour éviter le flash */
+  opacity: 0;
+  /* L'animation utilise "forwards" pour conserver l'état final (opacity: 1) */
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- Pop In (Optionnel pour d'autres éléments plus tard) --- */
+@keyframes popInElastic {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pop-in {
+  opacity: 0;
+  animation: popInElastic 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}

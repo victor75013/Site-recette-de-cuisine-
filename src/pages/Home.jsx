@@ -69,8 +69,8 @@ export default function Home() {
       ) : (
         <div className="feed-container">
           {filteredRecipes.length > 0 ? (
-            filteredRecipes.map(r => (
-              <FeedCard key={r.id} recipe={r} onOpenRecipe={() => console.log('Ouvrir recette', r.title)} />
+            filteredRecipes.map((r, index) => (
+              <FeedCard key={r.id} recipe={r} index={index} onOpenRecipe={() => console.log('Ouvrir recette', r.title)} />
             ))
           ) : (
             <div className="empty-state">

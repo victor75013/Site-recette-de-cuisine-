@@ -6,6 +6,7 @@ import AddEdit from './pages/AddEdit';
 import Sites from './pages/Sites';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
+import RecipeView from './pages/RecipeView';
 
 // Ce composant écoute les changements de route sans provoquer de re-rendu ailleurs
 function ScrollManager() {
@@ -74,6 +75,7 @@ export default function App() {
           <div id="app">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/recipe/:id" element={<RecipeView />} />
               <Route path="/add" element={<AddEdit />} />
               <Route path="/edit/:id" element={<AddEdit />} />
               <Route path="/sites" element={<Sites />} />

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getRecipeById } from '../core/data';
+import useDominantColor from '../hooks/useDominantColor';
 import { ArrowLeft, Clock, Users, ChefHat, CheckCircle2 } from 'lucide-react';
 import '../styles/features/recipes/view.css';
 
-export default function RecipeView() {
+export default function RecipeView({ asModal }) {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -39,6 +41,9 @@ export default function RecipeView() {
 
   // Image de secours
   const displayImage = recipe.imageUrl || 'https://images.unsplash.com/photo-1495195134817-a1a18bc081ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80';
+  
+  // Magie : on extrait la couleur dominante de l'image
+  const colorData = useDominantColor(displayImage);
 
   const totalTime = (parseInt(recipe.prepTime) || 0) + (parseInt(recipe.cookTime) || 0);
 
@@ -47,20 +52,46 @@ export default function RecipeView() {
   };
 
   return (
-    <div className="recipe-view-container">
+    <motion.div 
+      className={`recipe-view-container ${asModal ? 'recipe-view-modal' : ''}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.2 } }}
+      transition={{ duration: 0.4 }}
+      style={{
+        '--dominant-bg': colorData.bg,
+        '--dominant-text': colorData.text,
+      }}
+    >
       {/* BOUTON RETOUR */}
       <button className="btn-back-absolute" onClick={handleBack} aria-label="Retour">
         <ArrowLeft size={24} />
       </button>
 
-      {/* HERO SECTION (Animée) */}
-      <header className="recipe-hero animate-hero-expand">
+      {/* HERO SECTION (Animée par Framer Motion) */}
+      <motion.header 
+        className="recipe-hero"
+        initial={{ clipPath: 'inset(10vh 20% 10vh 20% round 30px)', scale: 0.9, filter: 'brightness(0.6)' }}
+        animate={{ clipPath: 'inset(0 0 0 0 round 0)', scale: 1, filter: 'brightness(1)' }}
+        exit={{ clipPath: 'inset(10vh 20% 10vh 20% round 30px)', scale: 0.9, filter: 'brightness(0.6)' }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="recipe-hero-bg">
           <img src={displayImage} alt={recipe.title} />
         </div>
-        <div className="recipe-hero-gradient"></div>
+      </motion.header>
+
+      {/* MAIN CONTENT (Cascade décalée via Framer Motion) */}
+      <motion.main 
+        className="recipe-main-content" 
+        style={{ marginTop: '40px' }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+      >
         
-        <div className="recipe-hero-content animate-content-fade-up">
+        <div className="recipe-hero-content" style={{ gridColumn: '1 / -1', padding: 0 }}>
           <h1 className="recipe-view-title">{recipe.title}</h1>
           <div className="recipe-view-meta">
             <div className="recipe-view-meta-item">
@@ -81,10 +112,6 @@ export default function RecipeView() {
             )}
           </div>
         </div>
-      </header>
-
-      {/* MAIN CONTENT (Cascade décalée) */}
-      <main className="recipe-main-content animate-main-content">
         
         {/* COLONNE GAUCHE : INGRÉDIENTS */}
         <aside>
@@ -131,7 +158,7 @@ export default function RecipeView() {
           )}
         </section>
 
-      </main>
-    </div>
+      </motion.main>
+    </motion.div>
   );
 }

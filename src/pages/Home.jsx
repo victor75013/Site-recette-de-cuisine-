@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useNavigationType, useLocation } from 'react-router-dom';
 import Fuse from 'fuse.js';
 import { getPublicRecipes } from '../core/data';
 import FeedCard from '../components/Feed/FeedCard';
@@ -8,11 +8,16 @@ import '../components/Feed/Feed.css';
 
 export default function Home() {
   const navigate = useNavigate();
+  const navType = useNavigationType();
+  const location = useLocation();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('Tout');
   
+  // POP means we navigated back (e.g., from RecipeView via browser back or navigate(-1))
+  const skipCascade = navType === 'POP';
+
   const FILTERS = ['Tout', 'Entrées', 'Plats principaux', 'Desserts', 'Healthy', 'Rapide'];
 
   useEffect(() => {
@@ -74,7 +79,7 @@ export default function Home() {
         <div className="feed-container">
           {filteredRecipes.length > 0 ? (
             filteredRecipes.map((r, index) => (
-              <FeedCard key={r.id} recipe={r} index={index} onOpenRecipe={() => navigate(`/recipe/${r.id}`, { state: { recipe: r } })} />
+              <FeedCard key={r.id} recipe={r} index={index} disableCascade={skipCascade} onOpenRecipe={() => navigate(`/recipe/${r.id}`, { state: { recipe: r, backgroundLocation: location } })} />
             ))
           ) : (
             <div className="empty-state">

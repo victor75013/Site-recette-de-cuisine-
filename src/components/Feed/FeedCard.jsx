@@ -3,7 +3,7 @@ import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ImageOff } from
 import { toggleLike, hasUserLiked, saveRecipeToBook, currentUser } from '../../core/data';
 import './Feed.css';
 
-export default function FeedCard({ recipe, onOpenRecipe, index = 0 }) {
+export default function FeedCard({ recipe, onOpenRecipe, index = 0, disableCascade = false }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(recipe.likesCount || 0);
   const [saved, setSaved] = useState(false);
@@ -63,9 +63,9 @@ export default function FeedCard({ recipe, onOpenRecipe, index = 0 }) {
 
   return (
     <article 
-      className="feed-card netflix-style animate-slide-up-fade" 
+      className={`feed-card netflix-style ${disableCascade ? '' : 'animate-slide-up-fade'}`} 
       onClick={onOpenRecipe}
-      style={{ animationDelay: `${index * 0.08}s` }}
+      style={{ animationDelay: disableCascade ? '0s' : `${index * 0.08}s` }}
     >
       <div className="feed-image-container" onDoubleClick={handleLike}>
         {(!recipe.imageUrl || imgError) ? (

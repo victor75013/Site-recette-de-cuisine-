@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import AddEdit from './pages/AddEdit';
@@ -13,29 +13,23 @@ import PageTransition from './components/PageTransition';
 // Ce composant écoute les changements de route sans provoquer de re-rendu ailleurs
 function ScrollManager() {
   const location = useLocation();
-  const navType = useNavigationType();
 
   useEffect(() => {
     // 1. On signale au reste de l'app (notamment la Sidebar) qu'une transition commence.
     window.dispatchEvent(new Event('navigation-start'));
 
     // 2. Retour en haut immédiat dès que la route change
-    // UNIQUEMENT si ce n'est pas un retour (POP) et pas l'ouverture d'une modale
-    const isModalOpen = location.state?.backgroundLocation != null;
-    const isPop = navType === 'POP';
+    // Utilisation d'un setTimeout(..., 0) pour s'assurer que le navigateur a fini de calculer le nouveau DOM
+    setTimeout(() => {
+      // Pour mobile (window / body)
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
 
-    if (!isModalOpen && !isPop) {
-      setTimeout(() => {
-        // Pour mobile (window / body)
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        
-        // Pour PC (.main-content)
-        const mainContent = document.querySelector('.main-content');
-        if (mainContent) mainContent.scrollTop = 0;
-      }, 0);
-    }
+      // Pour PC (.main-content)
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) mainContent.scrollTop = 0;
+    }, 0);
 
     // 3. On libère le verrou de la Sidebar après un court délai pour la fluidité
     const timer = setTimeout(() => {
@@ -43,7 +37,7 @@ function ScrollManager() {
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [location.pathname, location.state, navType]);
+  }, [location.pathname]);
 
   return null;
 }
@@ -80,7 +74,7 @@ function ToastContainer() {
 function AnimatedRoutes() {
   const location = useLocation();
   const backgroundLocation = location.state?.backgroundLocation;
-  
+
   return (
     <>
       {/* Route de fond (la page derrière la modale) */}
@@ -113,7 +107,7 @@ export default function App() {
     <Router>
       <ScrollManager />
       <div className="app-layout">
-        
+
         {/* COMPOSANT ENCAPSULÉ : gère tout ce qui touche à la barre de navigation (design, auth, scroll) */}
         <Sidebar />
 
@@ -125,7 +119,7 @@ export default function App() {
         </main>
 
       </div>
-      
+
       <ToastContainer />
     </Router>
   );

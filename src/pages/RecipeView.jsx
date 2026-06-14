@@ -56,7 +56,7 @@ export default function RecipeView({ asModal }) {
       className={`recipe-view-container ${asModal ? 'recipe-view-modal' : ''}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.2 } }}
+      exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.1 } }}
       transition={{ duration: 0.4 }}
       style={{
         '--dominant-bg': colorData.bg,
@@ -68,97 +68,88 @@ export default function RecipeView({ asModal }) {
         <ArrowLeft size={24} />
       </button>
 
-      {/* HERO SECTION (Animée par Framer Motion) */}
-      <motion.header 
-        className="recipe-hero"
-        initial={{ clipPath: 'inset(10vh 20% 10vh 20% round 30px)', scale: 0.9, filter: 'brightness(0.6)' }}
-        animate={{ clipPath: 'inset(0 0 0 0 round 0)', scale: 1, filter: 'brightness(1)' }}
-        exit={{ clipPath: 'inset(10vh 20% 10vh 20% round 30px)', scale: 0.9, filter: 'brightness(0.6)' }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="recipe-hero-bg">
-          <img src={displayImage} alt={recipe.title} />
-        </div>
-      </motion.header>
-
-      {/* MAIN CONTENT (Cascade décalée via Framer Motion) */}
-      <motion.main 
-        className="recipe-main-content" 
-        style={{ marginTop: '40px' }}
+      <motion.div 
+        className="recipe-split-layout"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 40 }}
-        transition={{ duration: 0.4, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
-        
-        <div className="recipe-hero-content" style={{ gridColumn: '1 / -1', padding: 0 }}>
-          <h1 className="recipe-view-title">{recipe.title}</h1>
-          <div className="recipe-view-meta">
-            <div className="recipe-view-meta-item">
-              <img src={authorPhoto} alt="Avatar" className="recipe-view-author-img" />
-              <span>{authorName}</span>
+        {/* COLONNE GAUCHE (Titre, Méta, Étapes) */}
+        <div className="recipe-left-col">
+          <div className="recipe-header-info">
+            <h1 className="recipe-view-title">{recipe.title}</h1>
+            <div className="recipe-view-meta">
+              <div className="recipe-view-meta-item">
+                <img src={authorPhoto} alt="Avatar" className="recipe-view-author-img" />
+                <span>{authorName}</span>
+              </div>
+              {totalTime > 0 && (
+                <div className="recipe-view-meta-item">
+                  <Clock size={20} />
+                  <span>{totalTime} min</span>
+                </div>
+              )}
+              {recipe.servings > 0 && (
+                <div className="recipe-view-meta-item">
+                  <Users size={20} />
+                  <span>{recipe.servings} {recipe.servingsUnit || 'personnes'}</span>
+                </div>
+              )}
             </div>
-            {totalTime > 0 && (
-              <div className="recipe-view-meta-item">
-                <Clock size={20} />
-                <span>{totalTime} min</span>
-              </div>
-            )}
-            {recipe.servings > 0 && (
-              <div className="recipe-view-meta-item">
-                <Users size={20} />
-                <span>{recipe.servings} {recipe.servingsUnit || 'personnes'}</span>
-              </div>
+            
+            {recipe.description && (
+              <p className="recipe-description">
+                {recipe.description}
+              </p>
             )}
           </div>
-        </div>
-        
-        {/* COLONNE GAUCHE : INGRÉDIENTS */}
-        <aside>
-          <div className="recipe-ingredients-card">
-            <h2 className="recipe-section-title"><ChefHat size={28} color="var(--primary)" /> Ingrédients</h2>
-            {recipe.ingredients && recipe.ingredients.length > 0 ? (
-              <ul className="ingredients-list">
-                {recipe.ingredients.map((ing, i) => (
-                  <li key={i} className="ingredient-item">
-                    <CheckCircle2 size={20} className="ingredient-bullet" />
-                    <span>{ing}</span>
-                  </li>
+
+          <section className="recipe-steps-section">
+            <h2 className="recipe-section-title">Préparation</h2>
+            {recipe.steps && recipe.steps.length > 0 ? (
+              <div className="steps-list">
+                {recipe.steps.map((step, i) => (
+                  <div key={i} className="step-card">
+                    <div className="step-number">{i + 1}</div>
+                    <div className="step-content">
+                      {step}
+                    </div>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
-              <p style={{color: 'var(--text-muted)'}}>Aucun ingrédient renseigné.</p>
+              <p style={{color: 'var(--text-muted)'}}>Aucune étape renseignée.</p>
             )}
+          </section>
+        </div>
+
+        {/* COLONNE DROITE (Sticky: Image + Ingrédients) */}
+        <aside className="recipe-right-col">
+          <div className="recipe-sticky-wrapper">
+            <div className="recipe-image-wrapper">
+              <img src={displayImage} alt={recipe.title} />
+            </div>
+
+            <div className="recipe-ingredients-card">
+              <h2 className="recipe-section-title"><ChefHat size={28} color="var(--primary)" /> Ingrédients</h2>
+              {recipe.ingredients && recipe.ingredients.length > 0 ? (
+                <ul className="ingredients-list">
+                  {recipe.ingredients.map((ing, i) => (
+                    <li key={i} className="ingredient-item">
+                      <CheckCircle2 size={20} className="ingredient-bullet" />
+                      <span>{ing}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p style={{color: 'var(--text-muted)'}}>Aucun ingrédient renseigné.</p>
+              )}
+            </div>
           </div>
         </aside>
 
-        {/* COLONNE DROITE : ÉTAPES */}
-        <section className="recipe-steps-section">
-          <h2 className="recipe-section-title" style={{paddingLeft: '12px'}}>Préparation</h2>
-          
-          {recipe.description && (
-            <p style={{fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '32px', paddingLeft: '12px'}}>
-              {recipe.description}
-            </p>
-          )}
-
-          {recipe.steps && recipe.steps.length > 0 ? (
-            <div className="steps-list">
-              {recipe.steps.map((step, i) => (
-                <div key={i} className="step-card">
-                  <div className="step-number">{i + 1}</div>
-                  <div className="step-content">
-                    {step}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p style={{color: 'var(--text-muted)', paddingLeft: '12px'}}>Aucune étape renseignée.</p>
-          )}
-        </section>
-
-      </motion.main>
+      </motion.div>
     </motion.div>
   );
 }

@@ -133,9 +133,14 @@ async function renderAddEditForm(editId = null, prefill = null) {
       <div class="dynamic-list" id="ingredients-list">
         ${ingredients.map((ing, i) => renderIngredientRow(ing, i)).join('')}
       </div>
-      <button type="button" class="btn btn--add-item" id="btn-add-ingredient">
-        + Ajouter un ingrédient
-      </button>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button type="button" class="btn btn--add-item" id="btn-add-ingredient" style="margin-top:0; flex:1;">
+          + Ajouter un ingrédient
+        </button>
+        <button type="button" class="btn btn--add-item" id="btn-add-section" style="margin-top:0; flex:1; background:rgba(245,158,11,0.05); border-color:rgba(245,158,11,0.4); color:var(--accent);">
+          + Ajouter une sous-partie
+        </button>
+      </div>
 
       <hr class="form-divider" />
 
@@ -164,12 +169,17 @@ async function renderAddEditForm(editId = null, prefill = null) {
 }
 
 function renderIngredientRow(value = '', index) {
+  const isHeader = value.startsWith('# ');
+  const displayValue = isHeader ? value.substring(2) : value;
   return `
-    <div class="dynamic-item" data-index="${index}">
+    <div class="dynamic-item ingredient-row ${isHeader ? 'is-header' : ''}" data-index="${index}">
+      <button type="button" class="btn-toggle-header" title="${isHeader ? 'Convertir en ingrédient' : 'Convertir en sous-partie (titre)'}" aria-label="${isHeader ? 'Convertir en sous-partie' : 'Convertir en sous-partie'}">
+        ${isHeader ? '🏷️' : '🥄'}
+      </button>
       <input class="form-input dynamic-item-input ingredient-input"
              type="text"
-             placeholder="Ex : 200g de farine"
-             value="${escapeHtml(value)}" />
+             placeholder="${isHeader ? 'Ex : Pour la sauce' : 'Ex : 200g de farine'}"
+             value="${escapeHtml(displayValue)}" />
       <button type="button" class="dynamic-item-remove" title="Supprimer" aria-label="Supprimer cet ingrédient">✕</button>
     </div>
   `;
@@ -200,6 +210,13 @@ function bindFormEvents(isEdit) {
     list.lastElementChild.querySelector('input').focus();
   });
 
+  document.getElementById('btn-add-section').addEventListener('click', () => {
+    const list = document.getElementById('ingredients-list');
+    const count = list.querySelectorAll('.dynamic-item').length;
+    list.insertAdjacentHTML('beforeend', renderIngredientRow('# ', count));
+    list.lastElementChild.querySelector('input').focus();
+  });
+
   document.getElementById('btn-add-step').addEventListener('click', () => {
     const list = document.getElementById('steps-list');
     const count = list.querySelectorAll('.dynamic-item').length;
@@ -209,12 +226,40 @@ function bindFormEvents(isEdit) {
   });
 
   document.getElementById('ingredients-list').addEventListener('click', (e) => {
+    const toggleBtn = e.target.closest('.btn-toggle-header');
+    if (toggleBtn) {
+      const row = toggleBtn.closest('.dynamic-item');
+      const input = row.querySelector('.ingredient-input');
+      const isHeader = row.classList.toggle('is-header');
+      
+      if (isHeader) {
+        toggleBtn.innerHTML = '🏷️';
+        toggleBtn.title = 'Convertir en ingrédient';
+        toggleBtn.setAttribute('aria-label', 'Convertir en ingrédient');
+        input.placeholder = 'Ex : Pour la sauce';
+      } else {
+        toggleBtn.innerHTML = '🥄';
+        toggleBtn.title = 'Convertir en sous-partie (titre)';
+        toggleBtn.setAttribute('aria-label', 'Convertir en sous-partie');
+        input.placeholder = 'Ex : 200g de farine';
+      }
+      return;
+    }
+
     if (e.target.classList.contains('dynamic-item-remove')) {
       const list = document.getElementById('ingredients-list');
       if (list.querySelectorAll('.dynamic-item').length > 1) {
         e.target.closest('.dynamic-item').remove();
       } else {
-        e.target.closest('.dynamic-item').querySelector('input').value = '';
+        const row = e.target.closest('.dynamic-item');
+        row.querySelector('input').value = '';
+        row.classList.remove('is-header');
+        const toggle = row.querySelector('.btn-toggle-header');
+        if (toggle) {
+          toggle.innerHTML = '🥄';
+          toggle.title = 'Convertir en sous-partie (titre)';
+          toggle.setAttribute('aria-label', 'Convertir en sous-partie');
+        }
       }
     }
   });
@@ -255,8 +300,13 @@ async function submitRecipeForm(isEdit) {
     return;
   }
 
-  const ingredients = [...document.querySelectorAll('.ingredient-input')]
-    .map(el => el.value.trim()).filter(Boolean);
+  const ingredients = [...document.querySelectorAll('#ingredients-list .dynamic-item')].map(row => {
+    const input = row.querySelector('.ingredient-input');
+    const value = input.value.trim();
+    if (!value) return null;
+    const isHeader = row.classList.contains('is-header');
+    return isHeader ? `# ${value}` : value;
+  }).filter(Boolean);
 
   const steps = [...document.querySelectorAll('.step-input')]
     .map(el => el.value.trim()).filter(Boolean);

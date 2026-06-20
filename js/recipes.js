@@ -59,7 +59,7 @@ function renderRecipeCard(recipe) {
   const metaItems = [
     timeLabel ? `<span class="meta-item">⏱️ ${timeLabel}</span>` : '',
     recipe.author ? `<span class="meta-item">👤 ${escapeHtml(recipe.author)}</span>` : '',
-    recipe.ingredients?.length ? `<span class="meta-item">🥄 ${recipe.ingredients.length} ingr.</span>` : '',
+    recipe.ingredients?.length ? `<span class="meta-item">🥄 ${recipe.ingredients.filter(ing => typeof ing === 'string' && !ing.startsWith('# ')).length} ingr.</span>` : '',
   ].filter(Boolean).join('');
 
   return `
@@ -202,9 +202,15 @@ async function openRecipeDetail(id) {
     ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
     : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
 
-  const ingredientsHtml = (recipe.ingredients || []).map(ing =>
-    `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`
-  ).join('');
+  const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.startsWith('# '));
+  const ingredientsHtml = (recipe.ingredients || []).map(ing => {
+    const isHeader = typeof ing === 'string' && ing.startsWith('# ');
+    if (isHeader) {
+      const title = ing.substring(2);
+      return `<li class="ingredient-item is-header">${escapeHtml(title)}</li>`;
+    }
+    return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
+  }).join('');
 
   const stepsHtml = (recipe.steps || []).map((step, i) =>
     `<li class="step-item"><span class="step-number">${i + 1}</span><span class="step-text">${escapeHtml(step)}</span></li>`
@@ -228,7 +234,7 @@ async function openRecipeDetail(id) {
 
       ${ingredientsHtml ? `
         <div class="detail-section">
-          <h3 class="detail-section-title">🥄 Ingrédients (${recipe.ingredients.length})</h3>
+          <h3 class="detail-section-title">🥄 Ingrédients (${actualIngredients.length})</h3>
           <ul class="ingredients-list">${ingredientsHtml}</ul>
         </div>
       ` : ''}

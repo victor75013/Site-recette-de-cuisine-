@@ -136,8 +136,12 @@
   <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(() => console.log('✅ Service Worker enregistré'))
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => {
+          console.log('✅ Service Worker enregistré');
+          // Vérifier les mises à jour à chaque chargement de page
+          reg.update();
+        })
         .catch(err => console.warn('⚠️ SW:', err));
     }
   </script>

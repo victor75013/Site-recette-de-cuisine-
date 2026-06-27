@@ -4,6 +4,7 @@
 
 const SETTINGS_KEY = 'carnetRecettes_settings';
 const SITES_KEY    = 'carnetRecettes_customSites';
+const LEGACY_RECIPES_KEY = 'carnetRecettes_v1';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAvuPpHvqpOxSU1RrQlQxamqMoqVVnk3Bk",
@@ -33,8 +34,28 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 let currentUser = null;
 
+function readLegacyRecipes() {
+  try {
+    const legacyRecipes = JSON.parse(localStorage.getItem(LEGACY_RECIPES_KEY) || '[]');
+    return Array.isArray(legacyRecipes) ? legacyRecipes : [];
+  } catch {
+    return []; 
+  }
+}
+
+function mergeRecipeLists(primary, secondary) {
+  const merged = new Map();
+  for (const recipe of [...secondary, ...primary]) {
+    if (!recipe) continue;
+    const id = recipe.id || generateId();
+    merged.set(id, { ...recipe, id });
+  }
+  return [...merged.values()];
+}
+
 // Auth Listeners
 auth.onAuthStateChanged(async user => {
+  const previousUser = currentUser;
   currentUser = user;
   const authBtn = document.getElementById('nav-auth');
   const userInfo = document.getElementById('user-info');
@@ -44,6 +65,15 @@ auth.onAuthStateChanged(async user => {
     if (authBtn) authBtn.style.display = 'none';
     if (userInfo) userInfo.style.display = 'flex';
     if (userAvatar) userAvatar.src = user.photoURL || '';
+
+    // Si l'utilisateur vient de se connecter ou si la session a été restaurée
+    if (!previousUser || previousUser.uid !== user.uid) {
+      cachedRecipes = null; // Vider le cache pour forcer une nouvelle lecture
+      await fetchRecipesFromDB();
+      if (typeof renderRecipeGrid === 'function' && document.getElementById('recipe-grid')) {
+        await renderRecipeGrid();
+      }
+    }
 
     // MIGRATION AUTOMATIQUE DES RECETTES LOCALES
     try {
@@ -56,6 +86,7 @@ auth.onAuthStateChanged(async user => {
             await db.collection('recipes').doc(r.id).set(r);
           }
           localStorage.removeItem('carnetRecettes_v1'); // On nettoie
+          cachedRecipes = null; // Vider le cache pour forcer une nouvelle lecture après migration
           await fetchRecipesFromDB();
           if (typeof renderRecipeGrid === 'function' && document.getElementById('recipe-grid')) {
             await renderRecipeGrid();
@@ -70,6 +101,15 @@ auth.onAuthStateChanged(async user => {
   } else {
     if (authBtn) authBtn.style.display = 'block';
     if (userInfo) userInfo.style.display = 'none';
+
+    // Si l'utilisateur s'est déconnecté
+    if (previousUser) {
+      cachedRecipes = null; // Vider le cache
+      await fetchRecipesFromDB();
+      if (typeof renderRecipeGrid === 'function' && document.getElementById('recipe-grid')) {
+        await renderRecipeGrid();
+      }
+    }
   }
 });
 
@@ -83,12 +123,16 @@ function logout() {
 
 // ---------- RECETTES (Firestore) ----------
 
-let cachedRecipes = [];
+let cachedRecipes = null;
 
 async function fetchRecipesFromDB() {
   try {
     const snapshot = await db.collection('recipes').get();
-    cachedRecipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const firestoreRecipes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const legacyRecipes = readLegacyRecipes();
+    cachedRecipes = firestoreRecipes.length > 0
+      ? mergeRecipeLists(firestoreRecipes, legacyRecipes)
+      : legacyRecipes;
     // Tri local pour ne pas exclure les recettes sans date
     cachedRecipes.sort((a, b) => {
       const dA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -98,12 +142,23 @@ async function fetchRecipesFromDB() {
     return cachedRecipes;
   } catch (err) {
     console.error("Erreur lecture Firebase:", err);
+    const legacyRecipes = readLegacyRecipes();
+    if (legacyRecipes.length > 0) {
+      cachedRecipes = legacyRecipes;
+      cachedRecipes.sort((a, b) => {
+        const dA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dB - dA;
+      });
+      return cachedRecipes;
+    }
+    cachedRecipes = [];
     return cachedRecipes;
   }
 }
 
 async function getAllRecipes() {
-  if (cachedRecipes.length === 0) {
+  if (cachedRecipes === null) {
     await fetchRecipesFromDB();
   }
   return cachedRecipes;

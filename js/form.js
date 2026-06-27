@@ -169,8 +169,9 @@ async function renderAddEditForm(editId = null, prefill = null) {
 }
 
 function renderIngredientRow(value = '', index) {
-  const isHeader = value.startsWith('# ');
-  const displayValue = isHeader ? value.substring(2) : value;
+  const trimmedValue = value.trim();
+  const isHeader = trimmedValue.startsWith('#');
+  const displayValue = isHeader ? trimmedValue.replace(/^#+\s*/, '').trim() : value;
   return `
     <div class="dynamic-item ingredient-row ${isHeader ? 'is-header' : ''}" data-index="${index}">
       <button type="button" class="btn-toggle-header" title="${isHeader ? 'Convertir en ingrédient' : 'Convertir en sous-partie (titre)'}" aria-label="${isHeader ? 'Convertir en sous-partie' : 'Convertir en sous-partie'}">

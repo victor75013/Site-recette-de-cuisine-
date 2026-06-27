@@ -59,7 +59,7 @@ function renderRecipeCard(recipe) {
   const metaItems = [
     timeLabel ? `<span class="meta-item">⏱️ ${timeLabel}</span>` : '',
     recipe.author ? `<span class="meta-item">👤 ${escapeHtml(recipe.author)}</span>` : '',
-    recipe.ingredients?.length ? `<span class="meta-item">🥄 ${recipe.ingredients.filter(ing => typeof ing === 'string' && !ing.startsWith('# ')).length} ingr.</span>` : '',
+    recipe.ingredients?.length ? `<span class="meta-item">🥄 ${recipe.ingredients.filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#')).length} ingr.</span>` : '',
   ].filter(Boolean).join('');
 
   return `
@@ -202,11 +202,11 @@ async function openRecipeDetail(id) {
     ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
     : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
 
-  const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.startsWith('# '));
+  const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
   const ingredientsHtml = (recipe.ingredients || []).map(ing => {
-    const isHeader = typeof ing === 'string' && ing.startsWith('# ');
+    const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
     if (isHeader) {
-      const title = ing.substring(2);
+      const title = ing.trim().replace(/^#+\s*/, '').trim();
       return `<li class="ingredient-item is-header">${escapeHtml(title)}</li>`;
     }
     return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;

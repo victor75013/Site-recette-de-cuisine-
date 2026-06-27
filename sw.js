@@ -1,7 +1,7 @@
 const CACHE_NAME = 'carnet-recettes-v12';
 
 // Fichiers mis en cache pour le mode hors-ligne
-const APP_SHELL = ['./index.html', './css/style.css', './js/data.js', './js/recipes.js', './js/form.js', './js/importer.js', './js/sites.js', './js/app.js', './manifest.json'];
+const APP_SHELL = ['./index.html', './css/style.css', './js/data.js', './js/recipes.js', './js/nutrition.js', './js/form.js', './js/importer.js', './js/sites.js', './js/app.js', './manifest.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));

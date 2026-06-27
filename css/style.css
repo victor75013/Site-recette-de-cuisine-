@@ -157,6 +157,32 @@ input,textarea,select{font-family:var(--font);}
 .detail-source{font-size:0.85rem;color:var(--text-dim);margin-top:32px;padding-top:24px;border-top:1px dashed var(--border);}
 .detail-actions{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
 
+/* NUTRITION CARD */
+.nutrition-card{background:linear-gradient(145deg,var(--surface),var(--bg-2));border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;animation:fadeSlideIn 0.4s ease both;}
+.nutrition-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);}
+.nutrition-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 12px;background:var(--bg-2);text-align:center;transition:all 0.3s ease;position:relative;overflow:hidden;}
+.nutrition-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0.8;transition:opacity 0.3s ease;}
+.nutrition-item:hover{background:var(--surface);}
+.nutrition-item:hover::before{opacity:1;}
+.nutrition-calories::before{background:linear-gradient(90deg,#ef4444,#f97316);}
+.nutrition-proteins::before{background:linear-gradient(90deg,#3b82f6,#6366f1);}
+.nutrition-lipids::before{background:linear-gradient(90deg,#f59e0b,#eab308);}
+.nutrition-carbs::before{background:linear-gradient(90deg,#22c55e,#10b981);}
+.nutrition-icon{font-size:1.6rem;line-height:1;}
+.nutrition-value{font-size:1.5rem;font-weight:900;color:var(--text);letter-spacing:-0.03em;line-height:1.1;}
+.nutrition-unit{font-size:0.7rem;font-weight:600;color:var(--text-muted);margin-left:2px;}
+.nutrition-label{font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;}
+.nutrition-per-serving{font-size:0.7rem;font-weight:600;color:var(--text-dim);margin-top:2px;padding:2px 8px;background:var(--surface-2);border-radius:10px;}
+.nutrition-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.nutrition-hint{font-size:0.72rem;color:var(--text-dim);font-weight:500;font-style:italic;}
+.nutrition-loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:24px;color:var(--text-muted);font-size:0.88rem;font-weight:500;}
+.nutrition-loading .spinner{width:18px;height:18px;}
+@media(max-width:768px){
+  .nutrition-grid{grid-template-columns:repeat(2,1fr);}
+  .nutrition-value{font-size:1.3rem;}
+  .nutrition-item{padding:16px 10px;}
+}
+
 /* FORM */
 .form-page-title{font-size:1.8rem;font-weight:900;margin-bottom:32px;letter-spacing:-0.02em;}
 .form-card{background:linear-gradient(145deg,var(--surface),var(--bg-2));border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px;max-width:760px;margin:0 auto;box-shadow:0 20px 40px rgba(0,0,0,0.1);}

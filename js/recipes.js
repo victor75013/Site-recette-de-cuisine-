@@ -232,6 +232,11 @@ async function openRecipeDetail(id) {
       <div class="detail-badges">${badges}</div>
       ${recipe.description ? `<p class="detail-description">${escapeHtml(recipe.description)}</p>` : ''}
 
+      <div id="nutrition-container">
+        <!-- Rempli asynchrone par nutrition.js -->
+        ${getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : ''}
+      </div>
+
       ${ingredientsHtml ? `
         <div class="detail-section">
           <h3 class="detail-section-title">🥄 Ingrédients (${actualIngredients.length})</h3>
@@ -262,6 +267,18 @@ async function openRecipeDetail(id) {
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Lancer le chargement de la nutrition en arrière-plan
+  const nutritionContainer = document.getElementById('nutrition-container');
+  if (nutritionContainer && getSettings().geminiApiKey && recipe.ingredients?.length) {
+    getNutritionForRecipe(recipe).then(nutrition => {
+      if (nutrition) {
+        nutritionContainer.innerHTML = renderNutritionCard(nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0);
+      } else {
+        nutritionContainer.innerHTML = '';
+      }
+    });
+  }
 
   document.getElementById('btn-edit-recipe').addEventListener('click', () => {
     closeModal();

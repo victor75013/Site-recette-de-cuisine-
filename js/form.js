@@ -334,6 +334,12 @@ async function submitRecipeForm(isEdit) {
     steps,
   };
 
+  // Si c'est une modification, on force le recalcul de la nutrition au prochain affichage
+  // en effaçant les anciennes valeurs (car les ingrédients ont pu changer)
+  if (existingId) {
+    recipe.nutrition = null;
+  }
+
   if (!recipe.id) delete recipe.id; // Let Firestore generate ID
 
   try {

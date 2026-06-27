@@ -336,7 +336,7 @@ async function findRecipeImage(title) {
     // Si Gemini est configuré, on lui demande le mot-clé principal pour améliorer la recherche
     if (settings.geminiApiKey) {
       try {
-        const prompt = `Quel est l'ingrédient ou le plat principal (en 1 à 3 mots maximum, en français) qui représente le mieux ce nom de recette : "${title}" ? Réponds UNIQUEMENT par le mot ou groupe de mots, sans aucune ponctuation.`;
+        const prompt = `Trouve le plat générique ou l'ingrédient principal (en 1 à 3 mots maximum) le plus adapté pour chercher une image sur Wikipedia de cette recette : "${title}". Exemples : "Tenders de poulets sauce miel" -> "Poulet frit", "Mousse au chocolat vegan" -> "Mousse au chocolat", "Tartare de crevettes à la mangue" -> "Tartare". Réponds UNIQUEMENT par le mot ou groupe de mots, sans ponctuation.`;
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${settings.geminiApiKey}`,
           {
@@ -349,7 +349,7 @@ async function findRecipeImage(title) {
         );
         const data = await response.json();
         const extracted = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (extracted && extracted.length < 30) {
+        if (extracted && extracted.length < 50) {
           keyword = extracted;
         }
       } catch (e) {

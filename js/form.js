@@ -340,6 +340,20 @@ async function submitRecipeForm(isEdit) {
     recipe.nutrition = null;
   }
 
+  // Recherche automatique d'image si manquante
+  if (!recipe.imageUrl) {
+    btnSave.innerHTML = '🔍 Recherche image...';
+    try {
+      const autoImage = await findRecipeImage(recipe.title);
+      if (autoImage) {
+        recipe.imageUrl = autoImage;
+      }
+    } catch(e) {
+      console.warn("Erreur recherche image auto", e);
+    }
+    btnSave.innerHTML = '⏳ Sauvegarde...';
+  }
+
   if (!recipe.id) delete recipe.id; // Let Firestore generate ID
 
   try {

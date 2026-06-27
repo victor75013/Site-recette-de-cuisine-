@@ -323,3 +323,64 @@ function statusHtml(type, message) {
   const spinner = type === 'loading' ? '<span class="spinner"></span>' : '';
   return `<div class="import-status ${type}">${spinner} ${message}</div>`;
 }
+
+/**
+ * Recherche automatiquement une image pour la recette via Wikimedia API
+ * Utilise Gemini pour extraire le mot-clé principal si la clé API est présente.
+ */
+async function findRecipeImage(title) {
+  try {
+    let keyword = title;
+    const settings = getSettings();
+    
+    // Si Gemini est configuré, on lui demande le mot-clé principal pour améliorer la recherche
+    if (settings.geminiApiKey) {
+      try {
+        const prompt = `Quel est l'ingrédient ou le plat principal (en 1 à 3 mots maximum, en français) qui représente le mieux ce nom de recette : "${title}" ? Réponds UNIQUEMENT par le mot ou groupe de mots, sans aucune ponctuation.`;
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${settings.geminiApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }]
+            }),
+          }
+        );
+        const data = await response.json();
+        const extracted = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (extracted && extracted.length < 30) {
+          keyword = extracted;
+        }
+      } catch (e) {
+        console.warn("[findRecipeImage] Gemini a échoué, on utilise le titre complet.", e);
+      }
+    }
+
+    // 1. Recherche Wikipedia pour trouver le titre de l'article exact
+    const searchUrl = `https://fr.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(keyword)}&utf8=&format=json&origin=*`;
+    const res = await fetch(searchUrl);
+    const data = await res.json();
+    
+    if (!data.query || !data.query.search || data.query.search.length === 0) {
+      return '';
+    }
+    
+    // 2. Récupère l'image principale de cet article
+    const articleTitle = data.query.search[0].title;
+    const imgUrl = `https://fr.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${encodeURIComponent(articleTitle)}&origin=*`;
+    const res2 = await fetch(imgUrl);
+    const data2 = await res2.json();
+    
+    const pages = data2.query.pages;
+    const pageId = Object.keys(pages)[0];
+    
+    if (pages[pageId] && pages[pageId].original && pages[pageId].original.source) {
+      return pages[pageId].original.source;
+    }
+    return '';
+  } catch (err) {
+    console.error("[findRecipeImage] Erreur de recherche d'image :", err);
+    return '';
+  }
+}

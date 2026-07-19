@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getCustomSites, addCustomSite, deleteCustomSite } from '../core/data';
-import { showToast } from '../core/utils';
+import { getCustomSites, addCustomSite, deleteCustomSite } from '../shared/api/data';
+import { showToast } from '../shared/lib/utils';
 
 const DEFAULT_SITES = [
   { id: 'marmiton',      name: 'Marmiton',       url: 'https://www.marmiton.org',             description: 'Le site de recettes de cuisine n°1 en France.',                   emoji: '👨‍🍳', tag: '🇫🇷 Français',      color: '#e8521a' },

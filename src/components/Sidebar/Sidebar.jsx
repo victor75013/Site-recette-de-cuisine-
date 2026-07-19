@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogIn, LogOut } from 'lucide-react';
-import { onAuthChange, loginWithGoogle, logout } from '../../core/data';
+import { onAuthChange, loginWithGoogle, logout } from '../../shared/api/data';
 import Navigation from './Navigation';
 import './Sidebar.css';
 

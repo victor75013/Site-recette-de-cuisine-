@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, ImageOff } from 'lucide-react';
-import { toggleLike, hasUserLiked, saveRecipeToBook, currentUser } from '../../core/data';
-import './Feed.css';
+import { toggleLike, hasUserLiked, saveRecipeToBook, currentUser } from '../../../shared/api/data';
+import './RecipeCard.css';
 
-export default function FeedCard({ recipe, onOpenRecipe, index = 0, disableCascade = false }) {
+export default function RecipeCard({ recipe, onOpenRecipe, index = 0, disableCascade = false }) {
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(recipe.likesCount || 0);
   const [saved, setSaved] = useState(false);

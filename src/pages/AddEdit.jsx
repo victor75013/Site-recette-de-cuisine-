@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getRecipeById, saveRecipe, currentUser } from '../core/data';
-import { showToast } from '../core/utils';
+import { getRecipeById, saveRecipe, currentUser } from '../shared/api/data';
+import { showToast } from '../shared/lib/utils';
 
 const CATEGORIES = [
   'Entrées', 'Plats principaux', 'Desserts', 'Soupes',

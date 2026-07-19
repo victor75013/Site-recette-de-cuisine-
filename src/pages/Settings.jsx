@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getSettings, saveSettings, getAllRecipes, deleteRecipe, saveRecipe, currentUser, generateId } from '../core/data';
-import { showToast } from '../core/utils';
+import { getSettings, saveSettings, getAllRecipes, deleteRecipe, saveRecipe, currentUser, generateId } from '../shared/api/data';
+import { showToast } from '../shared/lib/utils';
 
 export default function Settings() {
   const navigate = useNavigate();

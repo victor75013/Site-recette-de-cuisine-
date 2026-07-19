@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveRecipe, currentUser, getSettings } from '../core/data';
-import { showToast } from '../core/utils';
+import { saveRecipe, currentUser, getSettings } from '../shared/api/data';
+import { showToast } from '../shared/lib/utils';
 
 const LOCAL_SERVER = 'http://localhost:3001';
 

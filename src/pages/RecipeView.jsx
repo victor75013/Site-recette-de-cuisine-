@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getRecipeById } from '../core/data';
+import { getRecipeById } from '../shared/api/data';
 import useDominantColor from '../hooks/useDominantColor';
 import { ArrowLeft, Clock, Users, ChefHat, CheckCircle2 } from 'lucide-react';
 import '../styles/features/recipes/view.css';

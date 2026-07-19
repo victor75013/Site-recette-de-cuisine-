@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Sidebar from './components/Sidebar';
+import { Sidebar } from './widgets/sidebar/ui/Sidebar';
 import Home from './pages/Home';
 import AddEdit from './pages/AddEdit';
 import Sites from './pages/Sites';
 import Import from './pages/Import';
 import Settings from './pages/Settings';
 import RecipeView from './pages/RecipeView';
-import PageTransition from './components/PageTransition';
+import PageTransition from './shared/ui/PageTransition/PageTransition';
 import { ScrollManager } from './app/providers/ScrollManager';
 import { ToastContainer } from './shared/ui/Toast/ToastContainer';
 

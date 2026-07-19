@@ -1,0 +1,15 @@
+export const DEFAULT_SITES = [
+  { id: 'marmiton',      name: 'Marmiton',       url: 'https://www.marmiton.org',             description: 'Le site de recettes de cuisine n°1 en France.',                   emoji: '👨‍🍳', tag: '🇫🇷 Français',      color: '#e8521a' },
+  { id: '750g',          name: '750g',            url: 'https://www.750g.com',                 description: 'Des milliers de recettes faciles avec photos et vidéos.',           emoji: '🍽️', tag: '🇫🇷 Français',      color: '#f4a228' },
+  { id: 'cuisineaz',     name: 'Cuisine AZ',      url: 'https://www.cuisineaz.com',            description: 'Recettes simples et rapides au quotidien.',                         emoji: '🥘', tag: '🇫🇷 Français',      color: '#2e7d32' },
+  { id: 'ptitchef',      name: 'Ptitchef',        url: 'https://www.ptitchef.com',             description: 'Recettes de cuisine créatives par des amateurs passionnés.',        emoji: '🍳', tag: '🇫🇷 Français',      color: '#d32f2f' },
+  { id: 'lesfoodies',    name: 'Les Foodies',     url: 'https://www.lesfoodies.com',           description: 'Recettes tendances et saisonnières.',                               emoji: '🌿', tag: '🇫🇷 Français',      color: '#558b2f' },
+  { id: 'allrecipes',    name: 'AllRecipes',      url: 'https://www.allrecipes.com',           description: 'La plus grande communauté de recettes au monde.',                   emoji: '🌎', tag: '🌍 International',  color: '#e53935' },
+  { id: 'bbcgoodfood',   name: 'BBC Good Food',   url: 'https://www.bbcgoodfood.com',          description: 'Recettes testées et approuvées par la BBC.',                        emoji: '🫖', tag: '🌍 International',  color: '#1565c0' },
+  { id: 'seriouseats',   name: 'Serious Eats',    url: 'https://www.seriouseats.com',          description: 'Recettes scientifiques et techniques culinaires.',                  emoji: '🔬', tag: '🌍 International',  color: '#6a1b9a' },
+  { id: 'simplyrecipes', name: 'Simply Recipes',  url: 'https://www.simplyrecipes.com',        description: 'Recettes maison simples et délicieuses.',                           emoji: '🏡', tag: '🌍 International',  color: '#00695c' },
+  { id: 'ricardocuisine',name: 'Ricardo Cuisine', url: 'https://www.ricardocuisine.com/fr',   description: 'Recettes québécoises et inspirées du monde entier.',                emoji: '🍁', tag: '🌍 International',  color: '#c62828' },
+  { id: 'tiktok-food',   name: 'TikTok Cuisine',  url: 'https://www.tiktok.com/tag/recette',  description: 'Vidéos de recettes tendances sur TikTok.',                          emoji: '🎵', tag: '📱 Vidéos',         color: '#010101' },
+  { id: 'youtube-cooking',name:'YouTube Cuisine',  url: 'https://www.youtube.com/results?search_query=recette+cuisine', description: 'Chaînes de cuisine et tutoriels vidéo.', emoji: '▶️', tag: '📱 Vidéos',         color: '#c62828' },
+  { id: 'instagram-food', name:'Instagram Food',   url: 'https://www.instagram.com/explore/tags/recette/', description: 'Inspiration culinaire et recettes sur Instagram.',   emoji: '📸', tag: '📱 Vidéos',         color: '#ad1457' },
+];

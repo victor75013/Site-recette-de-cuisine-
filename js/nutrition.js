@@ -11,8 +11,11 @@
  */
 async function calculateNutrition(ingredients, apiKey) {
   // Filtrer les sous-titres (commençant par #)
-  const realIngredients = ingredients.filter(ing => !ing.trim().startsWith('#'));
+  const realIngredients = ingredients.filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
   if (realIngredients.length === 0) return null;
+
+  const cleanKey = (apiKey || '').trim();
+  if (!cleanKey) throw new Error("Clé API Gemini non définie.");
 
   const prompt = `Tu es un nutritionniste expert. Analyse cette liste d'ingrédients et calcule les valeurs nutritionnelles TOTALES de la recette complète.
 
@@ -33,72 +36,106 @@ Règles :
 - Les valeurs doivent être pour la recette ENTIÈRE (pas par portion)
 - Arrondis à l'entier le plus proche`;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json' },
-      }),
-    }
-  );
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+  let lastError = null;
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Erreur API Gemini (${response.status})`);
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' },
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Erreur API Gemini ${model} (${response.status})`);
+      }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      
+      let parsed = {};
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+      }
+
+      return {
+        calories: Math.round(Number(parsed.calories) || 0),
+        proteins: Math.round(Number(parsed.proteins) || 0),
+        lipids: Math.round(Number(parsed.lipids) || 0),
+        carbs: Math.round(Number(parsed.carbs) || 0),
+      };
+    } catch (err) {
+      lastError = err;
+    }
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-  const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+  throw lastError || new Error("Échec de la communication avec l'API Gemini.");
+}
 
-  return {
-    calories: Math.round(parsed.calories || 0),
-    proteins: Math.round(parsed.proteins || 0),
-    lipids: Math.round(parsed.lipids || 0),
-    carbs: Math.round(parsed.carbs || 0),
-  };
+/**
+ * Vérifie si un objet recette possède des valeurs nutritionnelles valides.
+ * @param {object} recipe - L'objet recette ou objet nutrition
+ * @returns {boolean}
+ */
+function hasValidNutrition(recipe) {
+  if (!recipe) return false;
+  const n = recipe.nutrition || recipe;
+  return typeof n === 'object' && n !== null && typeof n.calories === 'number' && n.calories > 0;
 }
 
 /**
  * Récupère ou calcule les valeurs nutritionnelles d'une recette.
- * Si elles existent déjà en base, les retourne directement.
+ * Si elles existent déjà en base et sont valides, les retourne directement.
  * Sinon, les calcule via Gemini et les sauvegarde.
  * @param {object} recipe - L'objet recette
  * @returns {Promise<{calories:number, proteins:number, lipids:number, carbs:number}|null>}
  */
 async function getNutritionForRecipe(recipe) {
-  // Si les valeurs existent déjà, les retourner
-  if (recipe.nutrition && recipe.nutrition.calories !== undefined) {
+  // Si les valeurs existent déjà et sont valides, les retourner
+  if (hasValidNutrition(recipe)) {
     return recipe.nutrition;
   }
 
   // Vérifier qu'on a une clé API et des ingrédients
   const settings = getSettings();
-  if (!settings.geminiApiKey) return null;
-  if (!recipe.ingredients || recipe.ingredients.length === 0) return null;
+  if (!settings.geminiApiKey) {
+    throw new Error("Aucune clé API Gemini n'a été renseignée.");
+  }
+  if (!recipe.ingredients || recipe.ingredients.length === 0) {
+    return null;
+  }
 
+  const nutrition = await calculateNutrition(recipe.ingredients, settings.geminiApiKey);
+  if (!nutrition) return null;
+
+  // Stocker dans la recette locale immédiatement
+  recipe.nutrition = nutrition;
+
+  // Tenter de sauvegarder les valeurs dans Firestore sans bloquer l'affichage en cas d'échec
   try {
-    const nutrition = await calculateNutrition(recipe.ingredients, settings.geminiApiKey);
-    if (!nutrition) return null;
-
-    // Sauvegarder les valeurs dans Firestore pour ne pas recalculer
-    if (recipe.id && currentUser) {
+    if (recipe.id && typeof currentUser !== 'undefined' && currentUser) {
       await db.collection('recipes').doc(recipe.id).update({ nutrition });
-      // Mettre à jour le cache local
-      if (cachedRecipes) {
+      if (typeof cachedRecipes !== 'undefined' && cachedRecipes) {
         const cached = cachedRecipes.find(r => r.id === recipe.id);
         if (cached) cached.nutrition = nutrition;
       }
     }
-
-    return nutrition;
-  } catch (err) {
-    console.warn('[Nutrition] Erreur de calcul:', err.message);
-    return null;
+  } catch (saveErr) {
+    console.warn('[Nutrition] Sauvegarde Firestore ignorée:', saveErr.message);
   }
+
+  return nutrition;
 }
 
 /**
@@ -108,7 +145,7 @@ async function getNutritionForRecipe(recipe) {
  * @returns {string} HTML
  */
 function renderNutritionCard(nutrition, servings) {
-  if (!nutrition) return '';
+  if (!hasValidNutrition({ nutrition })) return '';
 
   const perServing = servings > 0;
   const divider = perServing ? servings : 1;

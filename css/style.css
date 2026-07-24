@@ -339,3 +339,57 @@ input,textarea,select{font-family:var(--font);}
   .recipe-grid{grid-template-columns:1fr;gap:14px;}
   .sites-grid{grid-template-columns:1fr;}
 }
+
+/* ============================================================
+   MODE LIVRE DE CUISINE (STYLE SIMPLISSIME)
+   ============================================================ */
+.modal-header-actions{position:absolute;top:20px;left:20px;z-index:10;display:flex;align-items:center;gap:10px;}
+.view-toggle-btn{padding:8px 16px;border-radius:30px;border:1px solid var(--border);background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:white;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.view-toggle-btn:hover{background:var(--primary);border-color:var(--primary);transform:scale(1.05);}
+[data-theme="light"] .view-toggle-btn{background:rgba(255,255,255,0.85);color:var(--text);border-color:var(--border);}
+
+.cookbook-container{padding:36px;animation:fadeSlideIn 0.4s ease both;}
+.cookbook-header{text-align:center;margin-bottom:28px;}
+.cookbook-title{font-size:2.2rem;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;line-height:1.15;color:var(--text);margin-bottom:6px;}
+.cookbook-subtitle{font-size:1.15rem;font-style:italic;color:var(--primary);font-weight:500;}
+
+.cookbook-meta-bar{display:flex;align-items:center;justify-content:space-around;flex-wrap:wrap;gap:14px;padding:12px 16px;margin:24px 0 32px;border-top:2px solid var(--border);border-bottom:2px solid var(--border);font-size:0.85rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-muted);}
+.cookbook-meta-item{display:flex;align-items:center;gap:6px;}
+.cookbook-meta-item strong{color:var(--text);font-weight:900;}
+
+.cookbook-section-title{font-size:0.85rem;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.cookbook-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.cookbook-ingredients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;margin-bottom:36px;}
+.cookbook-ing-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;transition:all 0.3s ease;position:relative;}
+.cookbook-ing-card:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 8px 20px var(--primary-glow);}
+.cookbook-ing-card.is-header-card{grid-column:1/-1;background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(245,158,11,0.08));border:1px solid rgba(249,115,22,0.3);border-left:4px solid var(--primary);color:var(--primary);font-weight:800;font-size:0.85rem;padding:10px 16px;text-transform:uppercase;letter-spacing:0.1em;text-align:left;align-items:flex-start;}
+
+.cookbook-ing-icon{font-size:3rem;height:64px;display:flex;align-items:center;justify-content:center;transition:transform 0.3s ease;}
+.cookbook-ing-card:hover .cookbook-ing-icon{transform:scale(1.15) rotate(4deg);}
+.cookbook-ing-text{font-size:0.84rem;font-weight:600;color:var(--text-muted);line-height:1.35;word-break:break-word;}
+
+.cookbook-steps-box{border:2px solid var(--border);box-shadow:inset 0 0 0 3px var(--bg-2);border-radius:var(--radius-lg);padding:32px 28px;margin-bottom:32px;background:var(--surface-2);position:relative;}
+.cookbook-steps-list{list-style:none;display:flex;flex-direction:column;gap:20px;}
+.cookbook-step-item{display:flex;align-items:flex-start;gap:14px;font-size:0.96rem;line-height:1.6;color:var(--text);}
+.cookbook-step-num{font-weight:900;font-size:1.15rem;color:var(--primary);min-width:24px;flex-shrink:0;}
+.cookbook-step-text{flex:1;font-weight:500;}
+
+.cookbook-tip{margin-top:24px;padding-top:16px;border-top:1px dashed var(--border);font-size:0.86rem;font-style:italic;color:var(--text-muted);display:flex;align-items:flex-start;gap:8px;}
+.cookbook-tip strong{color:var(--accent);font-style:normal;}
+
+@media(max-width:768px){
+  .cookbook-container{padding:20px 16px;}
+  .cookbook-title{font-size:1.6rem;}
+  .cookbook-subtitle{font-size:1rem;}
+  .cookbook-meta-bar{font-size:0.75rem;padding:10px;margin:18px 0 24px;gap:8px;}
+  .cookbook-ingredients-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .cookbook-ing-card{padding:12px 8px;}
+  .cookbook-ing-icon{font-size:2.4rem;height:48px;}
+  .cookbook-ing-text{font-size:0.78rem;}
+  .cookbook-steps-box{padding:20px 16px;margin-bottom:24px;}
+  .cookbook-step-item{font-size:0.88rem;gap:10px;}
+  .modal-header-actions{top:14px;left:14px;}
+  .view-toggle-btn{padding:6px 12px;font-size:0.72rem;}
+}
+

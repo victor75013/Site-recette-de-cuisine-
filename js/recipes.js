@@ -187,6 +187,75 @@ async function updateRecipeGrid() {
   grid.innerHTML = recipes.length > 0 ? recipes.map(renderRecipeCard).join('') : emptyState;
 }
 
+// ---------- HELPERS MODE LIVRE / SIMPLISSIME ----------
+
+function getIngredientEmoji(str) {
+  if (!str) return '🥄';
+  const s = str.toLowerCase();
+  if (s.includes('bœuf') || s.includes('boeuf') || s.includes('steak') || s.includes('viande hachée')) return '🥩';
+  if (s.includes('poulet') || s.includes('dinde') || s.includes('volaille') || s.includes('canard')) return '🍗';
+  if (s.includes('porc') || s.includes('lardon') || s.includes('bacon') || s.includes('jambon') || s.includes('saucisse')) return '🥓';
+  if (s.includes('poisson') || s.includes('saumon') || s.includes('thon') || s.includes('cabillaud') || s.includes('truite')) return '🐟';
+  if (s.includes('crevette') || s.includes('scampi') || s.includes('gambas') || s.includes('fruit de mer')) return '🦐';
+  if (s.includes('poivron')) return '🫑';
+  if (s.includes('tomate')) return '🍅';
+  if (s.includes('oignon') || s.includes('échalote') || s.includes('echalote')) return '🧅';
+  if (s.includes('ail')) return '🧄';
+  if (s.includes('gingembre')) return '🫚';
+  if (s.includes('carotte')) return '🥕';
+  if (s.includes('pomme de terre') || s.includes('patate')) return '🥔';
+  if (s.includes('champignon')) return '🍄';
+  if (s.includes('concombre') || s.includes('courgette')) return '🥒';
+  if (s.includes('avocat')) return '🥑';
+  if (s.includes('brocoli') || s.includes('chou')) return '🥦';
+  if (s.includes('salade') || s.includes('laitue') || s.includes('épinard') || s.includes('epinard')) return '🥬';
+  if (s.includes('riz')) return '🍚';
+  if (s.includes('pâte') || s.includes('pate') || s.includes('spaghetti') || s.includes('nouille')) return '🍝';
+  if (s.includes('fromage') || s.includes('parmesan') || s.includes('mozzarella') || s.includes('gruyère') || s.includes('comté')) return '🧀';
+  if (s.includes('œuf') || s.includes('oeuf')) return '🥚';
+  if (s.includes('huile') || s.includes('sésame') || s.includes('olive')) return '🍾';
+  if (s.includes('soja') || s.includes('sauce') || s.includes('vinaigre')) return '🫙';
+  if (s.includes('lait') || s.includes('crème') || s.includes('creme')) return '🥛';
+  if (s.includes('beurre')) return '🧈';
+  if (s.includes('citron')) return '🍋';
+  if (s.includes('persil') || s.includes('menthe') || s.includes('coriandre') || s.includes('basilic') || s.includes('herbe')) return '🌿';
+  if (s.includes('sucre') || s.includes('miel') || s.includes('sirop')) return '🍯';
+  if (s.includes('sel') || s.includes('poivre') || s.includes('épice') || s.includes('epice') || s.includes('curry')) return '🧂';
+  if (s.includes('farine') || s.includes('levure') || s.includes('blé')) return '🌾';
+  if (s.includes('pain') || s.includes('baguette') || s.includes('mie')) return '🥖';
+  if (s.includes('chocolat') || s.includes('cacao')) return '🍫';
+  if (s.includes('pomme')) return '🍎';
+  if (s.includes('fraise') || s.includes('framboise')) return '🍓';
+  if (s.includes('banane')) return '🍌';
+  if (s.includes('orange')) return '🍊';
+  if (s.includes('vin') || s.includes('alcool') || s.includes('bière')) return '🍷';
+  if (s.includes('eau') || s.includes('bouillon')) return '💧';
+  return '🥄';
+}
+
+function splitRecipeTitle(title, description) {
+  let mainTitle = title || '';
+  let subtitle = '';
+
+  if (mainTitle.includes(' - ')) {
+    const parts = mainTitle.split(' - ');
+    mainTitle = parts[0];
+    subtitle = parts.slice(1).join(' - ');
+  } else if (mainTitle.includes(' : ')) {
+    const parts = mainTitle.split(' : ');
+    mainTitle = parts[0];
+    subtitle = parts.slice(1).join(' : ');
+  } else if (mainTitle.includes(' (')) {
+    const idx = mainTitle.indexOf(' (');
+    subtitle = mainTitle.substring(idx + 1).replace(/\)$/, '');
+    mainTitle = mainTitle.substring(0, idx);
+  } else if (description && description.length < 80) {
+    subtitle = description;
+  }
+
+  return { mainTitle: mainTitle.trim(), subtitle: subtitle.trim() };
+}
+
 // ---------- FICHE DÉTAIL ----------
 
 async function openRecipeDetail(id) {
@@ -195,78 +264,200 @@ async function openRecipeDetail(id) {
 
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
+  const viewMode = localStorage.getItem('recipe_view_mode') || 'cookbook'; // Default to cookbook mode!
+
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const emoji = getCategoryEmoji(recipe.category);
 
-  const imageSection = recipe.imageUrl
-    ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
-    : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
-
-  const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
-  const ingredientsHtml = (recipe.ingredients || []).map(ing => {
-    const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
-    if (isHeader) {
-      const title = ing.trim().replace(/^#+\s*/, '').trim();
-      return `<li class="ingredient-item is-header">${escapeHtml(title)}</li>`;
-    }
-    return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
-  }).join('');
-
-  const stepsHtml = (recipe.steps || []).map((step, i) =>
-    `<li class="step-item"><span class="step-number">${i + 1}</span><span class="step-text">${escapeHtml(step)}</span></li>`
-  ).join('');
-
-  const badges = [
-    recipe.category ? `<span class="badge badge--category">${getCategoryEmoji(recipe.category)} ${escapeHtml(recipe.category)}</span>` : '',
-    recipe.author ? `<span class="badge badge--author">👤 ${escapeHtml(recipe.author)}</span>` : '',
-    recipe.prepTime ? `<span class="badge badge--time">🥣 Prépa : ${formatTime(recipe.prepTime)}</span>` : '',
-    recipe.cookTime ? `<span class="badge badge--time">🔥 Cuisson : ${formatTime(recipe.cookTime)}</span>` : '',
-    totalTime > 0 ? `<span class="badge badge--time">⏱️ Total : ${formatTime(totalTime)}</span>` : '',
-    recipe.servings ? `<span class="badge badge--servings">${formatServings(recipe.servings, recipe.servingsUnit)}</span>` : '',
-  ].filter(Boolean).join('');
-
-  content.innerHTML = `
-    ${imageSection}
-    <div class="detail-body">
-      <h2 class="detail-title">${escapeHtml(recipe.title)}</h2>
-      <div class="detail-badges">${badges}</div>
-      ${recipe.description ? `<p class="detail-description">${escapeHtml(recipe.description)}</p>` : ''}
-
-      <div id="nutrition-container">
-        <!-- Rempli asynchrone par nutrition.js -->
-        ${getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : ''}
-      </div>
-
-      ${ingredientsHtml ? `
-        <div class="detail-section">
-          <h3 class="detail-section-title">🥄 Ingrédients (${actualIngredients.length})</h3>
-          <ul class="ingredients-list">${ingredientsHtml}</ul>
-        </div>
-      ` : ''}
-
-      ${stepsHtml ? `
-        <div class="detail-section">
-          <h3 class="detail-section-title">📋 Étapes de préparation</h3>
-          <ol class="steps-list">${stepsHtml}</ol>
-        </div>
-      ` : ''}
-
-      ${recipe.sourceUrl ? `
-        <div class="detail-source">
-          Source : <a href="${escapeHtml(recipe.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(recipe.sourceUrl)}</a>
-        </div>
-      ` : ''}
-
-      <div class="detail-actions">
-        <button class="btn btn--secondary" id="btn-edit-recipe" data-id="${recipe.id}">✏️ Modifier</button>
-        <button class="btn btn--danger" id="btn-delete-recipe" data-id="${recipe.id}">🗑️ Supprimer</button>
-      </div>
+  // Actions d'en-tête (Bouton de bascule de vue)
+  const headerActionsHtml = `
+    <div class="modal-header-actions">
+      <button class="view-toggle-btn" id="btn-toggle-view" title="Changer le style d'affichage">
+        ${viewMode === 'cookbook' ? '🎨 Vue Classique' : '📖 Mode Livre'}
+      </button>
     </div>
   `;
+
+  if (viewMode === 'cookbook') {
+    // RENDU MODE LIVRE DE CUISINE (SIMPLISSIME)
+    const { mainTitle, subtitle } = splitRecipeTitle(recipe.title, recipe.description);
+    
+    // Ingrédients sous forme de grille visuelle
+    const ingredientsGridHtml = (recipe.ingredients || []).map(ing => {
+      const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+      if (isHeader) {
+        const title = ing.trim().replace(/^#+\s*/, '').trim();
+        return `<div class="cookbook-ing-card is-header-card">${escapeHtml(title)}</div>`;
+      }
+      const ingEmoji = getIngredientEmoji(ing);
+      return `
+        <div class="cookbook-ing-card">
+          <div class="cookbook-ing-icon">${ingEmoji}</div>
+          <div class="cookbook-ing-text">${escapeHtml(ing)}</div>
+        </div>
+      `;
+    }).join('');
+
+    // Traitement des étapes et astuces
+    let stepsList = [];
+    let tipText = '';
+    (recipe.steps || []).forEach(step => {
+      if (step.toLowerCase().startsWith('astuce') || step.toLowerCase().startsWith('conseil')) {
+        tipText = step;
+      } else {
+        stepsList.push(step);
+      }
+    });
+
+    const stepsHtml = stepsList.map((step, i) => `
+      <li class="cookbook-step-item">
+        <span class="cookbook-step-num">${i + 1}.</span>
+        <span class="cookbook-step-text">${escapeHtml(step)}</span>
+      </li>
+    `).join('');
+
+    const metaItems = [
+      recipe.servings ? `<span class="cookbook-meta-item">POUR <strong>${recipe.servings} ${recipe.servingsUnit || 'PERSONNES'}</strong></span>` : '',
+      recipe.prepTime ? `<span class="cookbook-meta-item">PRÉPARATION : <strong>${formatTime(recipe.prepTime)}</strong></span>` : '',
+      recipe.cookTime ? `<span class="cookbook-meta-item">CUISSON : <strong>${formatTime(recipe.cookTime)}</strong></span>` : '',
+    ].filter(Boolean).join(' &nbsp;•&nbsp; ');
+
+    const imageHeader = recipe.imageUrl ? `
+      <div class="detail-image-wrap" style="height:220px;">
+        <img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.style.display='none'" />
+        <div class="detail-image-overlay"></div>
+      </div>
+    ` : '';
+
+    content.innerHTML = `
+      ${headerActionsHtml}
+      ${imageHeader}
+      <div class="cookbook-container" ${recipe.imageUrl ? 'style="margin-top:-40px;position:relative;z-index:2;"' : ''}>
+        <div class="cookbook-header">
+          <h2 class="cookbook-title">${escapeHtml(mainTitle)}</h2>
+          ${subtitle ? `<div class="cookbook-subtitle">${escapeHtml(subtitle)}</div>` : ''}
+        </div>
+
+        ${metaItems ? `<div class="cookbook-meta-bar">${metaItems}</div>` : ''}
+
+        ${ingredientsGridHtml ? `
+          <div class="cookbook-section-title">Ingrédients (${(recipe.ingredients || []).filter(i => !i.trim().startsWith('#')).length})</div>
+          <div class="cookbook-ingredients-grid">
+            ${ingredientsGridHtml}
+          </div>
+        ` : ''}
+
+        ${stepsHtml ? `
+          <div class="cookbook-section-title">Préparation</div>
+          <div class="cookbook-steps-box">
+            <ol class="cookbook-steps-list">
+              ${stepsHtml}
+            </ol>
+            ${tipText ? `
+              <div class="cookbook-tip">
+                💡 <strong>Astuce :</strong> ${escapeHtml(tipText.replace(/^(astuce|conseil)\s*:\s*/i, ''))}
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        <div id="nutrition-container">
+          ${getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : ''}
+        </div>
+
+        ${recipe.sourceUrl ? `
+          <div class="detail-source" style="margin-bottom:24px;">
+            Source : <a href="${escapeHtml(recipe.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(recipe.sourceUrl)}</a>
+          </div>
+        ` : ''}
+
+        <div class="detail-actions">
+          <button class="btn btn--secondary" id="btn-edit-recipe" data-id="${recipe.id}">✏️ Modifier</button>
+          <button class="btn btn--danger" id="btn-delete-recipe" data-id="${recipe.id}">🗑️ Supprimer</button>
+        </div>
+      </div>
+    `;
+
+  } else {
+    // RENDU MODE CLASSIQUE
+    const imageSection = recipe.imageUrl
+      ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
+      : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
+
+    const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
+    const ingredientsHtml = (recipe.ingredients || []).map(ing => {
+      const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+      if (isHeader) {
+        const title = ing.trim().replace(/^#+\s*/, '').trim();
+        return `<li class="ingredient-item is-header">${escapeHtml(title)}</li>`;
+      }
+      return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
+    }).join('');
+
+    const stepsHtml = (recipe.steps || []).map((step, i) =>
+      `<li class="step-item"><span class="step-number">${i + 1}</span><span class="step-text">${escapeHtml(step)}</span></li>`
+    ).join('');
+
+    const badges = [
+      recipe.category ? `<span class="badge badge--category">${getCategoryEmoji(recipe.category)} ${escapeHtml(recipe.category)}</span>` : '',
+      recipe.author ? `<span class="badge badge--author">👤 ${escapeHtml(recipe.author)}</span>` : '',
+      recipe.prepTime ? `<span class="badge badge--time">🥣 Prépa : ${formatTime(recipe.prepTime)}</span>` : '',
+      recipe.cookTime ? `<span class="badge badge--time">🔥 Cuisson : ${formatTime(recipe.cookTime)}</span>` : '',
+      totalTime > 0 ? `<span class="badge badge--time">⏱️ Total : ${formatTime(totalTime)}</span>` : '',
+      recipe.servings ? `<span class="badge badge--servings">${formatServings(recipe.servings, recipe.servingsUnit)}</span>` : '',
+    ].filter(Boolean).join('');
+
+    content.innerHTML = `
+      ${headerActionsHtml}
+      ${imageSection}
+      <div class="detail-body">
+        <h2 class="detail-title">${escapeHtml(recipe.title)}</h2>
+        <div class="detail-badges">${badges}</div>
+        ${recipe.description ? `<p class="detail-description">${escapeHtml(recipe.description)}</p>` : ''}
+
+        <div id="nutrition-container">
+          <!-- Rempli asynchrone par nutrition.js -->
+          ${getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : ''}
+        </div>
+
+        ${ingredientsHtml ? `
+          <div class="detail-section">
+            <h3 class="detail-section-title">🥄 Ingrédients (${actualIngredients.length})</h3>
+            <ul class="ingredients-list">${ingredientsHtml}</ul>
+          </div>
+        ` : ''}
+
+        ${stepsHtml ? `
+          <div class="detail-section">
+            <h3 class="detail-section-title">📋 Étapes de préparation</h3>
+            <ol class="steps-list">${stepsHtml}</ol>
+          </div>
+        ` : ''}
+
+        ${recipe.sourceUrl ? `
+          <div class="detail-source">
+            Source : <a href="${escapeHtml(recipe.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(recipe.sourceUrl)}</a>
+          </div>
+        ` : ''}
+
+        <div class="detail-actions">
+          <button class="btn btn--secondary" id="btn-edit-recipe" data-id="${recipe.id}">✏️ Modifier</button>
+          <button class="btn btn--danger" id="btn-delete-recipe" data-id="${recipe.id}">🗑️ Supprimer</button>
+        </div>
+      </div>
+    `;
+  }
 
   overlay.classList.add('open');
   overlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+
+  // Gestion du bouton de bascule de vue
+  document.getElementById('btn-toggle-view')?.addEventListener('click', () => {
+    const newMode = viewMode === 'cookbook' ? 'classic' : 'cookbook';
+    localStorage.setItem('recipe_view_mode', newMode);
+    openRecipeDetail(id);
+  });
 
   // Lancer le chargement de la nutrition en arrière-plan
   const nutritionContainer = document.getElementById('nutrition-container');
@@ -280,13 +471,13 @@ async function openRecipeDetail(id) {
     });
   }
 
-  document.getElementById('btn-edit-recipe').addEventListener('click', () => {
+  document.getElementById('btn-edit-recipe')?.addEventListener('click', () => {
     closeModal();
     renderAddEditForm(recipe.id);
     setActiveTab('add');
   });
 
-  document.getElementById('btn-delete-recipe').addEventListener('click', async () => {
+  document.getElementById('btn-delete-recipe')?.addEventListener('click', async () => {
     if (confirm(`Supprimer la recette "${recipe.title}" ?`)) {
       try {
         await deleteRecipe(recipe.id);
@@ -306,3 +497,4 @@ function closeModal() {
   overlay.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
 }
+

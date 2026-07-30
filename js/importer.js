@@ -138,33 +138,51 @@ async function importFromUrl(url) {
   previewEl.style.display = 'none';
   statusEl.style.display = 'block';
   const hostname = new URL(url).hostname.replace('www.', '');
-  const method = localServerAvailable ? '🖥️ Serveur Puppeteer' : '🌐 Proxy';
+  const method = localServerAvailable ? '🖥️ Serveur' : '🌐 Proxy';
   statusEl.innerHTML = statusHtml('loading', `⏳ Récupération via ${method}…`);
   try {
     const { text: htmlString, finalUrl } = await smartFetch(url);
     if (!htmlString) throw new Error('Contenu vide reçu.');
-    if (!localServerAvailable) {
-      const blockSignals = detectBlockedPage(htmlString);
-      if (blockSignals || (BLOCKED_SITES.some(s => hostname.includes(s)) && isErrorTitle(new DOMParser().parseFromString(htmlString, 'text/html').title))) {
-        showBlockedSiteMessage(url, hostname, previewEl, statusEl); return;
-      }
+
+    const blockSignals = detectBlockedPage(htmlString);
+    if (blockSignals) {
+      showBlockedSiteMessage(url, hostname, previewEl, statusEl);
+      return;
     }
+
     statusEl.innerHTML = statusHtml('loading', '🔍 Parsing des données…');
     const recipe = parseRecipeFromHtml(htmlString, finalUrl || url);
     if (!recipe || !recipe.title || isErrorTitle(recipe.title)) {
-      if (BLOCKED_SITES.some(s => hostname.includes(s)) && !localServerAvailable) { showBlockedSiteMessage(url, hostname, previewEl, statusEl); }
-      else throw new Error('Impossible d\'extraire une recette. Format non standard.');
+      if (BLOCKED_SITES.some(s => hostname.includes(s)) && !localServerAvailable) {
+        showBlockedSiteMessage(url, hostname, previewEl, statusEl);
+      } else {
+        throw new Error('Impossible d\'extraire une recette. Format non standard.');
+      }
       return;
     }
+    if ((!recipe.ingredients || recipe.ingredients.length === 0) && (!recipe.steps || recipe.steps.length === 0)) {
+      throw new Error('Aucun ingrédient ni étape n\'a pu être extrait de cette page (format non standard ou accès restreint).');
+    }
+
     let translatedRecipe = await translateRecipeIfNeeded(recipe, statusEl);
     statusEl.innerHTML = statusHtml('success', `✅ Recette importée !`);
     showImportPreview(translatedRecipe, previewEl, 'url');
-  } catch (err) { console.error('[Import URL]', err); statusEl.innerHTML = statusHtml('error', `❌ ${err.message}`); }
+  } catch (err) {
+    console.error('[Import URL]', err);
+    statusEl.innerHTML = statusHtml('error', `❌ ${err.message}`);
+  }
 }
 
 function detectBlockedPage(html) {
+  if (!html || html.length < 100) return true;
   const lower = html.slice(0, 5000).toLowerCase();
-  return (lower.includes('cloudflare') && (lower.includes('blocked') || lower.includes('ray id')) || lower.includes('access denied') || lower.includes('just a moment') || lower.includes('captcha'));
+  return (
+    (lower.includes('cloudflare') && (lower.includes('blocked') || lower.includes('ray id'))) ||
+    (lower.includes('access denied') && !lower.includes('recipe')) ||
+    lower.includes('just a moment') ||
+    lower.includes('enable javascript and cookies to continue') ||
+    lower.includes('captcha')
+  );
 }
 
 function isErrorTitle(title) {
@@ -202,12 +220,20 @@ function decodeHtmlEntities(str) {
 }
 
 function extractFromJsonLd(data, url) {
-  const getText = (val) => { if (!val) return ''; if (typeof val === 'string') return decodeHtmlEntities(val.replace(/<[^>]+>/g, '').trim()); if (Array.isArray(val)) return val.map(getText).join(', '); if (typeof val === 'object') return decodeHtmlEntities((val['@value'] || val.text || '').replace(/<[^>]+>/g, '').trim()); return String(val); };
+  const getText = (val) => { if (!val) return ''; if (typeof val === 'string') return decodeHtmlEntities(val.replace(/<[^>]+>/g, '').trim()); if (Array.isArray(val)) return val.map(getText).join(', '); if (typeof val === 'object') return decodeHtmlEntities((val['@value'] || val.text || val.name || '').replace(/<[^>]+>/g, '').trim()); return String(val); };
   const getList = (val) => { if (!val) return []; return (Array.isArray(val) ? val : [val]).map(getText).filter(Boolean); };
-  const getSteps = (val) => { if (!val) return []; return (Array.isArray(val) ? val : [val]).map(item => { if (typeof item === 'string') return decodeHtmlEntities(item.replace(/<[^>]+>/g, '').trim()); if (item['@type'] === 'HowToStep') return getText(item.text || item.name); return getText(item.text || item.name || item); }).filter(Boolean); };
-  const getTime = (iso) => { if (!iso) return 0; const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/); return match ? (parseInt(match[1] || 0) * 60) + parseInt(match[2] || 0) : 0; };
+  const getSteps = (val) => {
+    if (!val) return [];
+    return (Array.isArray(val) ? val : [val]).flatMap(item => {
+      if (typeof item === 'string') return [decodeHtmlEntities(item.replace(/<[^>]+>/g, '').trim())];
+      if (item['@type'] === 'HowToStep') return [getText(item.text || item.name)];
+      if (item['@type'] === 'HowToSection' && item.itemListElement) return getSteps(item.itemListElement);
+      return [getText(item.text || item.name || item)];
+    }).filter(Boolean);
+  };
+  const getTime = (iso) => { if (!iso) return 0; const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?/i); return match ? (parseInt(match[1] || 0) * 60) + parseInt(match[2] || 0) : 0; };
   const getImage = (img) => { if (!img) return ''; if (typeof img === 'string') return img; if (Array.isArray(img)) return getImage(img[0]); return img.url || img.contentUrl || ''; };
-  return { title: getText(data.name), description: getText(data.description), ingredients: getList(data.recipeIngredient), steps: getSteps(data.recipeInstructions), imageUrl: getImage(data.image), prepTime: getTime(data.prepTime), cookTime: getTime(data.cookTime), servings: parseInt(getText(data.recipeYield)) || 0, category: mapCategory(getText(data.recipeCategory)), sourceUrl: url };
+  return { title: getText(data.name || data.headline), description: getText(data.description), ingredients: getList(data.recipeIngredient), steps: getSteps(data.recipeInstructions), imageUrl: getImage(data.image), prepTime: getTime(data.prepTime), cookTime: getTime(data.cookTime), servings: parseInt(getText(data.recipeYield)) || 0, category: mapCategory(getText(data.recipeCategory)), sourceUrl: url };
 }
 
 function extractFromMicrodata(recipeEl, doc, url) {

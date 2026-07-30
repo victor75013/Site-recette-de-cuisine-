@@ -31,24 +31,79 @@ async function detectLanguage(text) {
   } catch { return 'fr'; }
 }
 
+function isBlockedHtml(html) {
+  if (!html || html.length < 100) return true;
+  const lower = html.toLowerCase();
+  if (lower.includes('access denied') && !lower.includes('recipe')) return true;
+  if (lower.includes('just a moment') || lower.includes('enable javascript and cookies to continue')) return true;
+  if (lower.includes('cloudflare') && (lower.includes('ray id') || lower.includes('blocked'))) return true;
+  return false;
+}
+
 app.post('/scrape', async (req, res) => {
   const { url } = req.body;
   if (!url || !url.startsWith('http')) return res.status(400).json({ error: 'URL invalide.' });
   console.log(`[Scrape] ${url}`);
+
+  // 1. Essaie d'abord un fetch HTTP direct avec headers navigateur (beaucoup plus rapide et contourne les blocages headless anti-bot de certains sites comme BBC Food)
+  try {
+    const fetchRes = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (fetchRes.ok) {
+      const html = await fetchRes.text();
+      if (!isBlockedHtml(html) && (html.includes('Recipe') || html.includes('recipe') || html.includes('ld+json') || html.length > 2000)) {
+        console.log(`[OK Direct Fetch] ${url} (${html.length} octets)`);
+        return res.json({ html, finalUrl: fetchRes.url || url });
+      }
+    }
+  } catch (err) {
+    console.warn(`[Fetch direct échoué, passage à Puppeteer] ${err.message}`);
+  }
+
+  // 2. Fallback vers Puppeteer pour les sites SPA / dépendant de JavaScript
   let browser;
   try {
-    browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-blink-features=AutomationControlled'] });
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled',
+        '--lang=fr-FR,fr'
+      ]
+    });
     const page = await browser.newPage();
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
+    });
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
     await page.evaluateOnNewDocument(() => { Object.defineProperty(navigator, 'webdriver', { get: () => false }); });
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
     await new Promise(r => setTimeout(r, 2500));
     const html = await page.content();
     const finalUrl = page.url();
-    console.log(`[OK] ${finalUrl}`);
+
+    if (isBlockedHtml(html)) {
+      console.error(`[Erreur scrape] Page bloquée par anti-bot : ${url}`);
+      return res.status(403).json({ error: "Ce site protège son contenu contre l'accès automatique (anti-bot / Access denied)." });
+    }
+
+    console.log(`[OK Puppeteer] ${finalUrl} (${html.length} octets)`);
     res.json({ html, finalUrl });
-  } catch (err) { console.error(`[Erreur scrape] ${err.message}`); res.status(500).json({ error: err.message }); }
-  finally { if (browser) await browser.close(); }
+  } catch (err) {
+    console.error(`[Erreur scrape] ${err.message}`);
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (browser) await browser.close();
+  }
 });
 
 app.post('/translate', async (req, res) => {

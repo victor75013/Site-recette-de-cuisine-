@@ -135,4 +135,9 @@ frontend.get('{*path}', (req, res) => res.sendFile(path.join(__dirname, 'index.h
 frontend.listen(3000, '0.0.0.0', () => {
   console.log(`  ➜  App : http://localhost:3000`);
   console.log('  Ctrl+C pour arrêter.\n');
+  try {
+    const { exec } = require('child_process');
+    if (process.platform === 'win32') exec('start http://localhost:3000');
+    else if (process.platform === 'darwin') exec('open http://localhost:3000');
+  } catch {}
 });

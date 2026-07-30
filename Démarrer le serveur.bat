@@ -20,5 +20,10 @@ if not exist "node_modules" (
   echo.
 )
 
+echo  🌐 Ouverture de l'application sur http://localhost:3000...
+start "" "http://localhost:3000"
+echo.
+
 node server.js
 pause
+

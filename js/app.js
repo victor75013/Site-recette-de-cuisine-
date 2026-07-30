@@ -34,16 +34,36 @@ function updateThemeUI(theme) {
   if (bnavIcon) bnavIcon.textContent = icon;
 }
 
+function checkFileProtocolWarning() {
+  if (window.location.protocol === 'file:' && !document.getElementById('file-protocol-banner')) {
+    const banner = document.createElement('div');
+    banner.id = 'file-protocol-banner';
+    banner.style.cssText = 'background:linear-gradient(135deg, #ef4444, #dc2626);color:#fff;padding:12px 16px;text-align:center;font-size:0.88rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 12px rgba(239,68,68,0.3);position:sticky;top:0;z-index:9999;';
+    banner.innerHTML = `
+      <span>⚠️ <strong>Mode fichier direct (file://)</strong> — Firebase interdit la connexion depuis un fichier local. Ouvrez <strong>http://localhost:3000</strong> pour vous connecter et importer vos recettes.</span>
+      <a href="http://localhost:3000" style="background:#fff;color:#dc2626;padding:5px 12px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:700;white-space:nowrap;">Ouvrir http://localhost:3000</a>
+    `;
+    document.body.prepend(banner);
+  }
+}
+
 async function init() {
   initTheme();
   bindNavigation();
   bindModalClose();
+  checkFileProtocolWarning();
   
   const authBtn = document.getElementById('nav-auth');
   const logoutBtn = document.getElementById('nav-logout');
   
   if (authBtn) {
     authBtn.addEventListener('click', async () => {
+      if (window.location.protocol === 'file:') {
+        showToast('Connexion impossible en mode file://. Lancez le serveur local.', 'error', 6000);
+        alert("⚠️ Connexion impossible depuis un fichier local (file://).\n\nFirebase exige que l'application soit ouverte via une adresse HTTP.\n\nLancez 'Démarrer le serveur.bat' puis rendez-vous sur :\nhttp://localhost:3000");
+        window.location.href = 'http://localhost:3000';
+        return;
+      }
       try {
         await loginWithGoogle();
         showToast('Connecté avec succès', 'success');

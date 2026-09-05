@@ -348,7 +348,7 @@ async function openRecipeDetail(id) {
         ` : ''}
 
         <div id="nutrition-container">
-          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : '')}
+          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : '')}
         </div>
 
         ${stepsHtml ? `
@@ -417,7 +417,7 @@ async function openRecipeDetail(id) {
 
         <div id="nutrition-container">
           <!-- Rempli asynchrone par nutrition.js -->
-          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (getSettings().geminiApiKey && recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : '')}
+          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>Analyse nutritionnelle en cours...</span></div>` : '')}
         </div>
 
         ${ingredientsHtml ? `
@@ -466,54 +466,17 @@ async function openRecipeDetail(id) {
       // Déjà calculé → affichage immédiat
       nutritionContainer.innerHTML = renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0);
     } else {
-      const settings = getSettings();
-      const apiKey = (settings.geminiApiKey || '').trim();
       const realIngredients = (recipe.ingredients || []).filter(i => typeof i === 'string' && !i.trim().startsWith('#'));
 
       if (realIngredients.length === 0) {
         nutritionContainer.innerHTML = '';
       } else {
         // Spinner pendant le calcul
-        const modeLabel = apiKey ? '🤖 Analyse IA en cours…' : '🌿 Recherche Open Food Facts…';
-        nutritionContainer.innerHTML = `<div class="nutrition-loading"><span class="spinner"></span> <span>${modeLabel}</span></div>`;
+        nutritionContainer.innerHTML = `<div class="nutrition-loading"><span class="spinner"></span> <span>🌿 Recherche Open Food Facts…</span></div>`;
 
         const servings = (recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions') ? (recipe.servings || 0) : 0;
 
-        // Fonction qui tente Gemini si clé dispo, sinon Open Food Facts, sinon les deux en cascade
-        const computeNutrition = apiKey
-          ? async () => {
-              try {
-                // Tenter Gemini en premier (résultat plus précis)
-                const prompt = `Tu es un nutritionniste. Calcule les valeurs nutritionnelles TOTALES pour cette recette. Ingrédients :\n${realIngredients.map(i => '- ' + i).join('\n')}\n\nRéponds UNIQUEMENT avec ce JSON (valeurs entières) :\n{"calories":0,"proteins":0,"lipids":0,"carbs":0}`;
-                const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-                for (const model of models) {
-                  try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } })
-                    });
-                    if (!res.ok) {
-                      const errBody = await res.json().catch(() => ({}));
-                      throw new Error(errBody.error?.message || `HTTP ${res.status}`);
-                    }
-                    const data = await res.json();
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-                    const match = text.match(/\{[\s\S]*\}/);
-                    const parsed = match ? JSON.parse(match[0]) : JSON.parse(text);
-                    return { calories: Math.round(Number(parsed.calories)||0), proteins: Math.round(Number(parsed.proteins)||0), lipids: Math.round(Number(parsed.lipids)||0), carbs: Math.round(Number(parsed.carbs)||0), source: 'gemini' };
-                  } catch (modelErr) { /* essayer modèle suivant */ }
-                }
-                // Gemini a échoué → fallback Open Food Facts
-                console.warn('[Nutrition] Gemini indisponible, fallback Open Food Facts');
-                return await calculateNutritionFree(recipe.ingredients);
-              } catch (e) {
-                return await calculateNutritionFree(recipe.ingredients);
-              }
-            }
-          : () => calculateNutritionFree(recipe.ingredients); // Pas de clé → Open Food Facts directement
-
-        computeNutrition()
+        calculateNutritionFree(recipe.ingredients)
           .then(nutrition => {
             if (nutrition && hasValidNutrition({ nutrition })) {
               recipe.nutrition = nutrition;

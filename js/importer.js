@@ -225,9 +225,14 @@ function extractFromJsonLd(data, url) {
   const getSteps = (val) => {
     if (!val) return [];
     return (Array.isArray(val) ? val : [val]).flatMap(item => {
+      if (!item) return [];
       if (typeof item === 'string') return [decodeHtmlEntities(item.replace(/<[^>]+>/g, '').trim())];
       if (item['@type'] === 'HowToStep') return [getText(item.text || item.name)];
-      if (item['@type'] === 'HowToSection' && item.itemListElement) return getSteps(item.itemListElement);
+      if (item['@type'] === 'HowToSection' && item.itemListElement) {
+        const sectionTitle = getText(item.name || item.text);
+        const subSteps = getSteps(item.itemListElement);
+        return sectionTitle ? [`# ${sectionTitle}`, ...subSteps] : subSteps;
+      }
       return [getText(item.text || item.name || item)];
     }).filter(Boolean);
   };

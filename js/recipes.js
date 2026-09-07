@@ -309,12 +309,21 @@ async function openRecipeDetail(id) {
       }
     });
 
-    const stepsHtml = stepsList.map((step, i) => `
-      <li class="cookbook-step-item">
-        <span class="cookbook-step-num">${i + 1}.</span>
-        <span class="cookbook-step-text">${escapeHtml(step)}</span>
-      </li>
-    `).join('');
+    let stepNumCookbook = 1;
+    const stepsHtml = stepsList.map((step) => {
+      const isHeader = typeof step === 'string' && step.trim().startsWith('#');
+      if (isHeader) {
+        const title = step.trim().replace(/^#+\s*/, '').trim();
+        return `<li class="cookbook-step-header">${escapeHtml(title)}</li>`;
+      }
+      const num = stepNumCookbook++;
+      return `
+        <li class="cookbook-step-item">
+          <span class="cookbook-step-num">${num}.</span>
+          <span class="cookbook-step-text">${escapeHtml(step)}</span>
+        </li>
+      `;
+    }).join('');
 
     const metaItems = [
       recipe.servings ? `<span class="cookbook-meta-item">POUR <strong>${recipe.servings} ${recipe.servingsUnit || 'PERSONNES'}</strong></span>` : '',
@@ -394,9 +403,16 @@ async function openRecipeDetail(id) {
       return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
     }).join('');
 
-    const stepsHtml = (recipe.steps || []).map((step, i) =>
-      `<li class="step-item"><span class="step-number">${i + 1}</span><span class="step-text">${escapeHtml(step)}</span></li>`
-    ).join('');
+    let stepNumClassic = 1;
+    const stepsHtml = (recipe.steps || []).map((step) => {
+      const isHeader = typeof step === 'string' && step.trim().startsWith('#');
+      if (isHeader) {
+        const title = step.trim().replace(/^#+\s*/, '').trim();
+        return `<li class="step-item is-header">${escapeHtml(title)}</li>`;
+      }
+      const num = stepNumClassic++;
+      return `<li class="step-item"><span class="step-number">${num}</span><span class="step-text">${escapeHtml(step)}</span></li>`;
+    }).join('');
 
     const badges = [
       recipe.category ? `<span class="badge badge--category">${getCategoryEmoji(recipe.category)} ${escapeHtml(recipe.category)}</span>` : '',

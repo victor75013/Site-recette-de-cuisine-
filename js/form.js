@@ -149,9 +149,14 @@ async function renderAddEditForm(editId = null, prefill = null) {
       <div class="dynamic-list" id="steps-list">
         ${steps.map((step, i) => renderStepRow(step, i)).join('')}
       </div>
-      <button type="button" class="btn btn--add-item" id="btn-add-step">
-        + Ajouter une étape
-      </button>
+      <div style="display:flex; gap:12px; margin-top:8px;">
+        <button type="button" class="btn btn--add-item" id="btn-add-step" style="margin-top:0; flex:1;">
+          + Ajouter une étape
+        </button>
+        <button type="button" class="btn btn--add-section" id="btn-add-step-section" style="margin-top:0; flex:1; background:rgba(245,158,11,0.05); border-color:rgba(245,158,11,0.4); color:var(--accent);">
+          + Ajouter une sous-partie
+        </button>
+      </div>
 
       <hr class="form-divider" />
 
@@ -187,19 +192,40 @@ function renderIngredientRow(value = '', index) {
 }
 
 function renderStepRow(value = '', index) {
+  const trimmedValue = value.trim();
+  const isHeader = trimmedValue.startsWith('#');
+  const displayValue = isHeader ? trimmedValue.replace(/^#+\s*/, '').trim() : value;
   return `
-    <div class="dynamic-item" data-index="${index}">
-      <span class="step-number-badge">${index + 1}</span>
+    <div class="dynamic-item step-row ${isHeader ? 'is-header' : ''}" data-index="${index}">
+      <button type="button" class="btn-toggle-header btn-toggle-step-header" title="${isHeader ? 'Convertir en étape' : 'Convertir en sous-partie (titre)'}" aria-label="${isHeader ? 'Convertir en étape' : 'Convertir en sous-partie'}">
+        ${isHeader ? '🏷️' : '📋'}
+      </button>
+      <span class="step-number-badge" ${isHeader ? 'style="display:none;"' : ''}>${index + 1}</span>
       <textarea class="form-textarea dynamic-item-input step-input list-textarea"
-                placeholder="Décrivez cette étape…">${escapeHtml(value)}</textarea>
+                placeholder="${isHeader ? 'Ex : Pour la sauce, Préparation de la pâte…' : 'Décrivez cette étape…'}">${escapeHtml(displayValue)}</textarea>
       <button type="button" class="dynamic-item-remove" title="Supprimer" aria-label="Supprimer cette étape">✕</button>
     </div>
   `;
 }
 
 function refreshStepNumbers() {
-  document.querySelectorAll('#steps-list .step-number-badge').forEach((badge, i) => {
-    badge.textContent = i + 1;
+  let stepNum = 1;
+  document.querySelectorAll('#steps-list .dynamic-item').forEach((row) => {
+    const badge = row.querySelector('.step-number-badge');
+    const toggleBtn = row.querySelector('.btn-toggle-step-header');
+    const isHeader = row.classList.contains('is-header');
+    if (badge) {
+      if (isHeader) {
+        badge.style.display = 'none';
+      } else {
+        badge.style.display = 'flex';
+        badge.textContent = stepNum++;
+      }
+    }
+    if (toggleBtn) {
+      toggleBtn.innerHTML = isHeader ? '🏷️' : '📋';
+      toggleBtn.title = isHeader ? 'Convertir en étape' : 'Convertir en sous-partie (titre)';
+    }
   });
 }
 
@@ -222,6 +248,14 @@ function bindFormEvents(isEdit) {
     const list = document.getElementById('steps-list');
     const count = list.querySelectorAll('.dynamic-item').length;
     list.insertAdjacentHTML('beforeend', renderStepRow('', count));
+    refreshStepNumbers();
+    list.lastElementChild.querySelector('textarea').focus();
+  });
+
+  document.getElementById('btn-add-step-section')?.addEventListener('click', () => {
+    const list = document.getElementById('steps-list');
+    const count = list.querySelectorAll('.dynamic-item').length;
+    list.insertAdjacentHTML('beforeend', renderStepRow('# ', count));
     refreshStepNumbers();
     list.lastElementChild.querySelector('textarea').focus();
   });
@@ -266,13 +300,30 @@ function bindFormEvents(isEdit) {
   });
 
   document.getElementById('steps-list').addEventListener('click', (e) => {
+    const toggleBtn = e.target.closest('.btn-toggle-step-header');
+    if (toggleBtn) {
+      const row = toggleBtn.closest('.dynamic-item');
+      const input = row.querySelector('.step-input');
+      const isHeader = row.classList.toggle('is-header');
+      if (isHeader) {
+        input.placeholder = 'Ex : Pour la sauce, Préparation de la pâte…';
+      } else {
+        input.placeholder = 'Décrivez cette étape…';
+      }
+      refreshStepNumbers();
+      return;
+    }
+
     if (e.target.classList.contains('dynamic-item-remove')) {
       const list = document.getElementById('steps-list');
       if (list.querySelectorAll('.dynamic-item').length > 1) {
         e.target.closest('.dynamic-item').remove();
         refreshStepNumbers();
       } else {
-        e.target.closest('.dynamic-item').querySelector('textarea').value = '';
+        const row = e.target.closest('.dynamic-item');
+        row.querySelector('textarea').value = '';
+        row.classList.remove('is-header');
+        refreshStepNumbers();
       }
     }
   });
@@ -309,8 +360,13 @@ async function submitRecipeForm(isEdit) {
     return isHeader ? `# ${value}` : value;
   }).filter(Boolean);
 
-  const steps = [...document.querySelectorAll('.step-input')]
-    .map(el => el.value.trim()).filter(Boolean);
+  const steps = [...document.querySelectorAll('#steps-list .dynamic-item')].map(row => {
+    const input = row.querySelector('.step-input');
+    const value = input ? input.value.trim() : '';
+    if (!value) return null;
+    const isHeader = row.classList.contains('is-header');
+    return isHeader ? `# ${value}` : value;
+  }).filter(Boolean);
 
   const existingId = document.getElementById('recipe-id').value;
   const btnSave = document.getElementById('btn-save-recipe');

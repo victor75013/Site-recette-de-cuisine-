@@ -154,6 +154,10 @@ input,textarea,select{font-family:var(--font);}
 .step-item:hover{border-color:rgba(249,115,22,0.4);transform:translateX(6px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
 .step-number{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;font-size:0.9rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px var(--primary-glow);}
 .step-text{font-size:0.98rem;color:var(--text);line-height:1.7;padding-top:5px;}
+.step-item.is-header{background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(245,158,11,0.08));border:1px solid rgba(249,115,22,0.3);border-left:4px solid var(--primary);font-weight:800;color:var(--primary);font-size:0.9rem;padding:12px 18px;margin-top:10px;text-transform:uppercase;letter-spacing:0.08em;border-radius:var(--radius-sm);}
+.step-item.is-header:first-child{margin-top:0;}
+.step-item.is-header:hover{transform:none;box-shadow:none;}
+[data-theme="light"] .step-item.is-header{background:linear-gradient(135deg,rgba(249,115,22,0.08),rgba(245,158,11,0.05));}
 .detail-source{font-size:0.85rem;color:var(--text-dim);margin-top:32px;padding-top:24px;border-top:1px dashed var(--border);}
 .detail-actions{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
 
@@ -203,8 +207,9 @@ input,textarea,select{font-family:var(--font);}
 .btn-toggle-header{width:46px;height:46px;flex-shrink:0;border:1px solid var(--border);background:var(--surface-2);border-radius:var(--radius-sm);color:var(--text-dim);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;cursor:pointer;}
 .btn-toggle-header:hover{background:var(--primary-glow);border-color:var(--primary);color:var(--primary);transform:scale(1.05);}
 .dynamic-item.is-header .btn-toggle-header{background:var(--primary-glow);border-color:rgba(249,115,22,0.4);color:var(--primary);}
-.dynamic-item.is-header .ingredient-input{font-weight:800;color:var(--primary);border-color:rgba(249,115,22,0.4);background:var(--surface-2);}
-[data-theme="light"] .dynamic-item.is-header .ingredient-input{color:var(--primary-dark);background:rgba(249,115,22,0.05);}
+.dynamic-item.is-header .ingredient-input,.dynamic-item.is-header .step-input{font-weight:800;color:var(--primary);border-color:rgba(249,115,22,0.4);background:var(--surface-2);}
+.dynamic-item.is-header .step-input{min-height:50px;}
+[data-theme="light"] .dynamic-item.is-header .ingredient-input,[data-theme="light"] .dynamic-item.is-header .step-input{color:var(--primary-dark);background:rgba(249,115,22,0.05);}
 .dynamic-item-remove{width:46px;height:46px;flex-shrink:0;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);color:var(--text-muted);font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.3s ease;}
 .dynamic-item-remove:hover{background:var(--danger);border-color:var(--danger);color:white;transform:scale(1.05);}
 .step-number-badge{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));color:white;font-size:0.85rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:7px;box-shadow:0 4px 10px var(--primary-glow);}
@@ -374,6 +379,9 @@ input,textarea,select{font-family:var(--font);}
 .cookbook-step-item{display:flex;align-items:flex-start;gap:14px;font-size:0.96rem;line-height:1.6;color:var(--text);}
 .cookbook-step-num{font-weight:900;font-size:1.15rem;color:var(--primary);min-width:24px;flex-shrink:0;}
 .cookbook-step-text{flex:1;font-weight:500;}
+.cookbook-step-header{background:linear-gradient(135deg,rgba(249,115,22,0.12),rgba(245,158,11,0.08));border:1px solid rgba(249,115,22,0.3);border-left:4px solid var(--primary);color:var(--primary);font-weight:800;font-size:0.85rem;padding:10px 16px;text-transform:uppercase;letter-spacing:0.1em;border-radius:var(--radius-sm);margin-top:12px;margin-bottom:4px;}
+.cookbook-step-header:first-child{margin-top:0;}
+[data-theme="light"] .cookbook-step-header{background:linear-gradient(135deg,rgba(249,115,22,0.08),rgba(245,158,11,0.05));}
 
 .cookbook-tip{margin-top:24px;padding-top:16px;border-top:1px dashed var(--border);font-size:0.86rem;font-style:italic;color:var(--text-muted);display:flex;align-items:flex-start;gap:8px;}
 .cookbook-tip strong{color:var(--accent);font-style:normal;}

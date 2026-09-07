@@ -8,7 +8,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#f97316" />
+  <meta name="theme-color" content="#f6f3eb" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Recettes" />
@@ -23,11 +23,12 @@
   <!-- Anti-flash thème : applique le thème avant le rendu -->
   <script>
     (function() {
-      const t = localStorage.getItem('theme');
-      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      const t = localStorage.getItem('theme') || 'light';
+      if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      else document.documentElement.setAttribute('data-theme', 'light');
     })();
   </script>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=20" />
 </head>
 <body>
 
@@ -36,7 +37,7 @@
     <div class="header-inner">
       <div class="brand">
         <img src="logo.png" alt="Logo" class="brand-icon" style="width:38px;height:38px;border-radius:10px;object-fit:cover;" />
-        <span class="brand-name">Carnet de Recettes <span style="font-size:0.6rem; background:linear-gradient(135deg, var(--primary), var(--accent)); color:white; padding:3px 8px; border-radius:12px; margin-left:6px; vertical-align:middle; font-weight:800; letter-spacing:0.05em; box-shadow:0 2px 8px rgba(249,115,22,0.3);">V2.0 CLOUD</span></span>
+        <span class="brand-name">Carnet de Recettes <span style="font-size:0.65rem; background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border); padding:3px 9px; border-radius:12px; margin-left:8px; vertical-align:middle; font-weight:700; letter-spacing:0.06em;">V2.0 CLOUD</span></span>
       </div>
       <div style="display:flex; align-items:center; gap:20px;">
         <nav class="nav" id="main-nav">
@@ -60,11 +61,11 @@
           </button>
         </nav>
         <div class="auth-section">
-          <button class="btn btn--sm" id="nav-auth" style="background:var(--primary-glow);color:var(--primary);border:1px solid rgba(249,115,22,0.4);display:none;font-weight:800;">
+          <button class="btn btn--sm" id="nav-auth" style="background:var(--surface-2);color:var(--text);border:1px solid var(--border);display:none;font-weight:700;">
             Se connecter
           </button>
           <div id="user-info" style="display:none;align-items:center;gap:10px;">
-            <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--primary);object-fit:cover;box-shadow:0 2px 8px rgba(249,115,22,0.3);" />
+            <img id="user-avatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--border);object-fit:cover;box-shadow:var(--shadow-sm);" />
             <button class="btn btn--sm btn--danger" id="nav-logout" style="padding:6px 12px;font-size:0.75rem;">Quitter</button>
           </div>
         </div>
@@ -126,13 +127,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
 
-  <script src="js/data.js?v=19"></script>
-  <script src="js/recipes.js?v=19"></script>
-  <script src="js/nutrition.js?v=19"></script>
-  <script src="js/form.js?v=19"></script>
-  <script src="js/importer.js?v=19"></script>
-  <script src="js/sites.js?v=19"></script>
-  <script src="js/app.js?v=19"></script>
+  <script src="js/data.js?v=20"></script>
+  <script src="js/recipes.js?v=20"></script>
+  <script src="js/nutrition.js?v=20"></script>
+  <script src="js/form.js?v=20"></script>
+  <script src="js/importer.js?v=20"></script>
+  <script src="js/sites.js?v=20"></script>
+  <script src="js/app.js?v=20"></script>
 
   <!-- Service Worker -->
   <script>

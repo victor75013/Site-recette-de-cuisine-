@@ -4,7 +4,7 @@ let currentTab = 'home';
 
 /* ====== THEME ====== */
 function initTheme() {
-  const saved = localStorage.getItem('theme') || 'dark';
+  const saved = localStorage.getItem('theme') || 'light';
   applyTheme(saved);
   document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
   const bnavTheme = document.getElementById('bnav-theme');
@@ -12,15 +12,15 @@ function initTheme() {
 }
 
 function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
   applyTheme(current === 'dark' ? 'light' : 'dark');
 }
 
 function applyTheme(theme) {
-  if (theme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
   } else {
-    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
   }
   localStorage.setItem('theme', theme);
   updateThemeUI(theme);

@@ -8,7 +8,7 @@
   --radius-sm:10px; --radius:16px; --radius-lg:24px;
   --shadow:0 4px 24px rgba(0,0,0,0.5); --shadow-lg:0 16px 48px rgba(0,0,0,0.7);
   --glow:0 0 40px rgba(249,115,22,0.12);
-  --transition:0.25s ease; --font:'Outfit',system-ui,sans-serif;
+  --transition:0.25s ease; --font:'Jost',system-ui,sans-serif;
 }
 [data-theme="light"] {
   --bg:#f8fafc; --bg-2:#f1f5f9; --surface:rgba(255,255,255,0.9); --surface-2:#f1f5f9;

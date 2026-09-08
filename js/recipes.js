@@ -79,6 +79,7 @@ function renderRecipeCard(recipe) {
 
 
 let currentAuthorFilter = '';
+let currentCategoryFilter = '';
 
 async function renderRecipeGrid() {
   const app = document.getElementById('app');
@@ -95,7 +96,16 @@ async function renderRecipeGrid() {
     </div>
   ` : '';
 
-  const categoryOptions = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  const categoryBarHtml = `
+    <nav class="category-bar" id="category-bar" aria-label="Filtrer par catégorie">
+      <button class="category-link ${!currentCategoryFilter ? 'active' : ''}" data-category="">TOUS</button>
+      ${categories.map(c => `
+        <button class="category-link ${currentCategoryFilter === c ? 'active' : ''}" data-category="${escapeHtml(c)}">
+          ${escapeHtml(c.toUpperCase())}
+        </button>
+      `).join('')}
+    </nav>
+  `;
 
   app.innerHTML = `
     <div class="page-header">
@@ -110,19 +120,30 @@ async function renderRecipeGrid() {
         <span class="search-icon">🔍</span>
         <input class="search-input" type="search" id="search-input" placeholder="Rechercher une recette, un ingrédient…" aria-label="Rechercher" />
       </div>
-      <select class="category-select" id="category-select" aria-label="Filtrer par catégorie">
-        <option value="">Toutes les catégories</option>
-        ${categoryOptions}
-      </select>
     </div>
+
+    ${categoryBarHtml}
 
     <div class="recipe-grid" id="recipe-grid"></div>
   `;
 
   currentAuthorFilter = '';
+  currentCategoryFilter = '';
 
   document.getElementById('search-input').addEventListener('input', updateRecipeGrid);
-  document.getElementById('category-select').addEventListener('change', updateRecipeGrid);
+
+  const categoryBar = document.getElementById('category-bar');
+  if (categoryBar) {
+    categoryBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.category-link');
+      if (btn) {
+        document.querySelectorAll('.category-link').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategoryFilter = btn.dataset.category || '';
+        updateRecipeGrid();
+      }
+    });
+  }
 
   const authorTabsContainer = document.getElementById('author-tabs');
   if (authorTabsContainer) {
@@ -157,7 +178,7 @@ async function updateRecipeGrid() {
   if (!grid) return;
 
   const searchQuery = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
-  const categoryFilter = document.getElementById('category-select')?.value || '';
+  const categoryFilter = currentCategoryFilter;
 
   const allRecipes = await getAllRecipes();
   let recipes = [...allRecipes];

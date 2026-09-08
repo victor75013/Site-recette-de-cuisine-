@@ -313,7 +313,7 @@ input, textarea, select { font-family: var(--font); }
 .recipe-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -341,8 +341,8 @@ input, textarea, select { font-family: var(--font); }
 .recipe-card:nth-child(6){animation-delay:200ms;}
 .recipe-card:nth-child(n+7){animation-delay:240ms;}
 
-.card-image-wrap { width: 100%; height: 230px; overflow: hidden; position: relative; }
-.card-image { width: 100%; height: 100%; object-fit: cover; background: var(--bg-2); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.card-image-wrap { width: 100%; height: 230px; overflow: hidden; position: relative; border-radius: 0; }
+.card-image { width: 100%; height: 100%; object-fit: cover; background: var(--bg-2); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); border-radius: 0; }
 .recipe-card:hover .card-image { transform: scale(1.07); }
 .card-image-placeholder {
   width: 100%;
@@ -353,6 +353,7 @@ input, textarea, select { font-family: var(--font); }
   justify-content: center;
   font-size: 4rem;
   transition: transform 0.6s ease;
+  border-radius: 0;
 }
 .recipe-card:hover .card-image-placeholder { transform: scale(1.06); }
 .card-overlay {
@@ -375,7 +376,7 @@ input, textarea, select { font-family: var(--font); }
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #f7f4ee;
-  border-radius: 20px;
+  border-radius: 0;
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -442,7 +443,7 @@ input, textarea, select { font-family: var(--font); }
 .modal {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0;
   width: 100%;
   max-width: 760px;
   max-height: 90vh;
@@ -476,7 +477,7 @@ input, textarea, select { font-family: var(--font); }
   background: var(--danger);
   transform: rotate(90deg) scale(1.08);
 }
-.detail-image-wrap { position: relative; height: 320px; overflow: hidden; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.detail-image-wrap { position: relative; height: 320px; overflow: hidden; border-radius: 0; }
 .detail-image { width: 100%; height: 100%; object-fit: cover; }
 .detail-image-placeholder {
   width: 100%;
@@ -1162,8 +1163,8 @@ input, textarea, select { font-family: var(--font); }
   .card-meta { gap: 8px; font-size: 0.72rem; }
   .card-desc-strip { padding: 10px 12px; font-size: 0.78rem; }
   .modal-overlay { padding: 0; align-items: flex-end; }
-  .modal { max-height: 95vh; border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-width: 100%; }
-  .detail-image-wrap { height: 200px; }
+  .modal { max-height: 95vh; border-radius: 0; max-width: 100%; }
+  .detail-image-wrap { height: 200px; border-radius: 0; }
   .detail-body { padding: 20px 18px; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
   .form-card { padding: 20px; border-radius: var(--radius); }
   .form-grid { grid-template-columns: 1fr; gap: 14px; }

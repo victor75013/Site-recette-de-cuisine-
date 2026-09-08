@@ -117,7 +117,6 @@ async function renderRecipeGrid() {
 
     <div class="toolbar">
       <div class="search-wrap">
-        <span class="search-icon">🔍</span>
         <input class="search-input" type="search" id="search-input" placeholder="Rechercher une recette, un ingrédient…" aria-label="Rechercher" />
       </div>
     </div>

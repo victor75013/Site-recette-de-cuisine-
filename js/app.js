@@ -49,6 +49,7 @@ function checkFileProtocolWarning() {
 
 async function init() {
   initTheme();
+  updateNavLabels();
   bindNavigation();
   bindModalClose();
   checkFileProtocolWarning();
@@ -66,11 +67,11 @@ async function init() {
       }
       try {
         await loginWithGoogle();
-        showToast('Connecté avec succès', 'success');
+        showToast(t('toast.connected'), 'success');
         navigateTo('home');
       } catch (err) {
         console.error(err);
-        showToast('Erreur de connexion : ' + err.message, 'error', 5000);
+        showToast(t('toast.error.login') + err.message, 'error', 5000);
       }
     });
   }
@@ -78,7 +79,7 @@ async function init() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       await logout();
-      showToast('Déconnecté', 'info');
+      showToast(t('toast.disconnected'), 'info');
       navigateTo('home');
     });
   }
@@ -130,48 +131,75 @@ function bindModalClose() {
 function renderSettingsPage() {
   const app = document.getElementById('app');
   const settings = getSettings();
+  const lang = getLang();
+
   app.innerHTML = `
-    <h1 class="form-page-title">⚙️ Paramètres</h1>
+    <h1 class="form-page-title">${t('settings.title')}</h1>
     <div class="settings-container">
+
       <div class="settings-card">
-        <div class="settings-title">🤖 Intelligence Artificielle</div>
+        <div class="settings-title">${t('settings.language.title')}</div>
         <div class="settings-row">
-          <label class="settings-label" for="gemini-key">Clé API Gemini (optionnel)</label>
-          <input class="form-input" type="password" id="gemini-key" value="${escapeHtml(settings.geminiApiKey || '')}" placeholder="AIza..." autocomplete="off" />
-          <span class="settings-hint">Permet à Gemini d'extraire les recettes TikTok. Clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</span>
+          <label class="settings-label" for="lang-select">${t('settings.language.label')}</label>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <button class="lang-btn ${lang === 'fr' ? 'active' : ''}" data-lang="fr" id="lang-fr" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;border:2px solid ${lang === 'fr' ? 'var(--accent)' : 'var(--border)'};background:${lang === 'fr' ? 'var(--accent)' : 'var(--surface-2)'};color:${lang === 'fr' ? '#fff' : 'var(--text)'};font-weight:600;cursor:pointer;font-size:0.9rem;transition:all 0.2s;">
+              🇫🇷 Français
+            </button>
+            <button class="lang-btn ${lang === 'en' ? 'active' : ''}" data-lang="en" id="lang-en" style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;border:2px solid ${lang === 'en' ? 'var(--accent)' : 'var(--border)'};background:${lang === 'en' ? 'var(--accent)' : 'var(--surface-2)'};color:${lang === 'en' ? '#fff' : 'var(--text)'};font-weight:600;cursor:pointer;font-size:0.9rem;transition:all 0.2s;">
+              🇬🇧 English
+            </button>
+          </div>
         </div>
-        <button class="btn btn--primary btn--sm" id="btn-save-settings">💾 Sauvegarder</button>
       </div>
+
       <div class="settings-card">
-        <div class="settings-title">🗄️ Données</div>
+        <div class="settings-title">${t('settings.ai.title')}</div>
         <div class="settings-row">
-          <span class="settings-label">Exporter toutes les recettes</span>
-          <span class="settings-hint">Télécharge un fichier JSON avec toutes vos recettes.</span>
+          <label class="settings-label" for="gemini-key">${t('settings.gemini.label')}</label>
+          <input class="form-input" type="password" id="gemini-key" value="${escapeHtml(settings.geminiApiKey || '')}" placeholder="AIza..." autocomplete="off" />
+          <span class="settings-hint">${t('settings.gemini.hint')} <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.</span>
         </div>
-        <button class="btn btn--secondary btn--sm" id="btn-export" style="margin-bottom:16px;">⬇️ Exporter (JSON)</button>
+        <button class="btn btn--primary btn--sm" id="btn-save-settings">${t('settings.save')}</button>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">${t('settings.data.title')}</div>
         <div class="settings-row">
-          <span class="settings-label">Importer un fichier de recettes</span>
-          <span class="settings-hint">Fusionne des recettes depuis un export JSON.</span>
+          <span class="settings-label">${t('settings.export.label')}</span>
+          <span class="settings-hint">${t('settings.export.hint')}</span>
+        </div>
+        <button class="btn btn--secondary btn--sm" id="btn-export" style="margin-bottom:16px;">${t('settings.export.btn')}</button>
+        <div class="settings-row">
+          <span class="settings-label">${t('settings.import.label')}</span>
+          <span class="settings-hint">${t('settings.import.hint')}</span>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <input type="file" id="import-file-input" accept=".json" style="display:none" />
-          <button class="btn btn--secondary btn--sm" id="btn-import-file">⬆️ Importer (JSON)</button>
+          <button class="btn btn--secondary btn--sm" id="btn-import-file">${t('settings.import.btn')}</button>
         </div>
         <hr class="form-divider" style="margin:20px 0;" />
-        <div class="settings-row"><span class="settings-label" style="color:var(--danger);">Zone dangereuse</span></div>
-        <button class="btn btn--danger btn--sm" id="btn-reset-data">🗑️ Supprimer toutes les recettes</button>
+        <div class="settings-row"><span class="settings-label" style="color:var(--danger);">${t('settings.danger')}</span></div>
+        <button class="btn btn--danger btn--sm" id="btn-reset-data">${t('settings.delete.btn')}</button>
       </div>
+
       <div class="settings-card">
-        <div class="settings-title">ℹ️ À propos</div>
-        <p style="font-size:0.88rem;color:var(--text-muted);line-height:1.7;"><strong>Carnet de Recettes</strong> — Stockage local (localStorage).<br/>Vos recettes sont sauvegardées sur cet appareil.</p>
+        <div class="settings-title">${t('settings.about.title')}</div>
+        <p style="font-size:0.88rem;color:var(--text-muted);line-height:1.7;"><strong>${t('brand.name')}</strong> — ${t('settings.about.text')}</p>
       </div>
     </div>
   `;
 
+  // Language buttons
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setLang(btn.dataset.lang);
+    });
+  });
+
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const key = document.getElementById('gemini-key').value.trim();
     saveSettings({ geminiApiKey: key });
-    showToast('Paramètres sauvegardés.', 'success');
+    showToast(t('settings.saved'), 'success');
   });
 
   document.getElementById('btn-export').addEventListener('click', async () => {
@@ -181,7 +209,7 @@ function renderSettingsPage() {
     link.href = URL.createObjectURL(blob);
     link.download = `recettes_${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
-    showToast('Export téléchargé !', 'success');
+    showToast(t('toast.exported'), 'success');
   });
 
   document.getElementById('btn-import-file').addEventListener('click', () => {
@@ -195,8 +223,8 @@ function renderSettingsPage() {
     reader.onload = async (ev) => {
       try {
         const imported = JSON.parse(ev.target.result);
-        if (!Array.isArray(imported)) throw new Error('Format invalide.');
-        if (!currentUser) throw new Error('Vous devez être connecté pour importer.');
+        if (!Array.isArray(imported)) throw new Error(t('toast.error.format'));
+        if (!currentUser) throw new Error(t('toast.need.login.import'));
         let count = 0;
         for (const r of imported) { 
           if (r.title) { 
@@ -204,26 +232,26 @@ function renderSettingsPage() {
             count++; 
           } 
         }
-        showToast(`${count} recette(s) importée(s) !`, 'success');
+        showToast(`${count} ${t('toast.imported')}`, 'success');
         navigateTo('home');
-      } catch (err) { showToast('Erreur import : ' + err.message, 'error'); }
+      } catch (err) { showToast(t('toast.error.import') + err.message, 'error'); }
     };
     reader.readAsText(file);
   });
 
   document.getElementById('btn-reset-data').addEventListener('click', async () => {
-    if (confirm('Voulez-vous vraiment supprimer toutes VOS recettes du cloud ? Cette action est irréversible.')) {
-      if (!currentUser) return showToast('Vous devez être connecté.', 'error');
+    if (confirm(t('settings.delete.confirm'))) {
+      if (!currentUser) return showToast(t('settings.not.connected'), 'error');
       try {
         const recipes = await getAllRecipes();
         const myRecipes = recipes.filter(r => r.createdBy === currentUser.uid);
         for (const r of myRecipes) {
           await deleteRecipe(r.id);
         }
-        showToast('Vos recettes ont été supprimées.', 'info');
+        showToast(t('settings.deleted'), 'info');
         navigateTo('home');
       } catch(err) {
-        showToast('Erreur: ' + err.message, 'error');
+        showToast(t('toast.error.generic') + err.message, 'error');
       }
     }
   });

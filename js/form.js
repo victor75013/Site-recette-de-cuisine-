@@ -2,25 +2,37 @@
    form.js — Formulaire d'ajout / modification de recette
    ============================================================ */
 
-const CATEGORIES = [
+const CATEGORIES_FR = [
   'Entrées', 'Plats principaux', 'Desserts', 'Soupes',
   'Salades', 'Marinades', 'Sauces', 'Petits-déjeuners',
   'Snacks', 'Boissons', 'Autres',
 ];
 
-const SERVINGS_UNITS = [
-  { value: 'personnes', label: 'personnes' },
-  { value: 'portions',  label: 'portions'  },
-  { value: 'pièces',    label: 'pièces'    },
-  { value: 'kg',        label: 'kg'        },
-  { value: 'g',         label: 'g'         },
-  { value: 'litres',    label: 'litres'    },
-  { value: 'cl',        label: 'cl'        },
+const CATEGORIES_EN = [
+  'Starters', 'Main courses', 'Desserts', 'Soups',
+  'Salads', 'Marinades', 'Sauces', 'Breakfasts',
+  'Snacks', 'Drinks', 'Others',
 ];
+
+function getCategories() {
+  return getLang() === 'en' ? CATEGORIES_EN : CATEGORIES_FR;
+}
+
+function getServingsUnits() {
+  return [
+    { value: 'personnes', label: t('unit.people')   },
+    { value: 'portions',  label: t('unit.portions') },
+    { value: 'pièces',    label: t('unit.pieces')   },
+    { value: 'kg',        label: t('unit.kg')       },
+    { value: 'g',         label: t('unit.g')        },
+    { value: 'litres',    label: t('unit.liters')   },
+    { value: 'cl',        label: t('unit.cl')       },
+  ];
+}
 
 async function renderAddEditForm(editId = null, prefill = null) {
   const app    = document.getElementById('app');
-  app.innerHTML = `<div class="empty-state"><h3>Chargement...</h3></div>`;
+  app.innerHTML = `<div class="empty-state"><h3>${t('form.loading')}</h3></div>`;
   
   const recipe = editId ? await getRecipeById(editId) : null;
   const data   = recipe || prefill || {};
@@ -28,6 +40,9 @@ async function renderAddEditForm(editId = null, prefill = null) {
 
   const allRecipes = await getAllRecipes();
   const authors = [...new Set(allRecipes.map(r => r.author).filter(Boolean))].sort();
+
+  const CATEGORIES = getCategories();
+  const SERVINGS_UNITS = getServingsUnits();
 
   const categoryOptions = CATEGORIES.map(c =>
     `<option value="${c}" ${data.category === c ? 'selected' : ''}>${c}</option>`
@@ -37,7 +52,7 @@ async function renderAddEditForm(editId = null, prefill = null) {
   const steps = data.steps?.length ? data.steps : [''];
 
   app.innerHTML = `
-    <h1 class="form-page-title">${isEdit ? '✏️ Modifier la recette' : '🍴 Nouvelle recette'}</h1>
+    <h1 class="form-page-title">${isEdit ? t('form.edit.title') : t('form.new.title')}</h1>
 
     <form class="form-card" id="recipe-form" novalidate>
       <input type="hidden" id="recipe-id" value="${isEdit ? escapeHtml(recipe.id) : ''}" />
@@ -45,26 +60,26 @@ async function renderAddEditForm(editId = null, prefill = null) {
       <div class="form-grid">
         <!-- Titre -->
         <div class="form-group form-group--full">
-          <label class="form-label" for="f-title">Titre <span>*</span></label>
+          <label class="form-label" for="f-title">${t('form.title.label')} <span>*</span></label>
           <input class="form-input" id="f-title" type="text" required
-                 placeholder="Ex : Risotto aux champignons"
+                 placeholder="${t('form.title.placeholder')}"
                  value="${escapeHtml(data.title || '')}" />
         </div>
 
         <!-- Catégorie -->
         <div class="form-group">
-          <label class="form-label" for="f-category">Catégorie</label>
+          <label class="form-label" for="f-category">${t('form.category.label')}</label>
           <select class="form-select" id="f-category">
-            <option value="">— Choisir —</option>
+            <option value="">${t('form.category.choose')}</option>
             ${categoryOptions}
           </select>
         </div>
 
         <!-- Auteur -->
         <div class="form-group">
-          <label class="form-label" for="f-author">Auteur de la recette</label>
+          <label class="form-label" for="f-author">${t('form.author.label')}</label>
           <input class="form-input" id="f-author" type="text" list="author-list"
-                 placeholder="Ex : Victor"
+                 placeholder="${t('form.author.placeholder')}"
                  value="${escapeHtml(data.author || '')}" />
           <datalist id="author-list">
             ${authors.map(a => `<option value="${escapeHtml(a)}"></option>`).join('')}
@@ -73,10 +88,10 @@ async function renderAddEditForm(editId = null, prefill = null) {
 
         <!-- Quantité -->
         <div class="form-group">
-          <label class="form-label" for="f-servings">Quantité</label>
+          <label class="form-label" for="f-servings">${t('form.qty.label')}</label>
           <div style="display:flex; gap:8px;">
             <input class="form-input" id="f-servings" type="number" min="0" step="any"
-                   placeholder="Ex : 4"
+                   placeholder="${t('form.qty.placeholder')}"
                    value="${data.servings || ''}" style="flex:1; min-width:0;" />
             <select class="form-select" id="f-servings-unit" style="flex:1; min-width:0;">
               ${SERVINGS_UNITS.map(u =>
@@ -88,30 +103,30 @@ async function renderAddEditForm(editId = null, prefill = null) {
 
         <!-- Temps prépa -->
         <div class="form-group">
-          <label class="form-label" for="f-prep">Temps de préparation (min)</label>
+          <label class="form-label" for="f-prep">${t('form.prep.label')}</label>
           <input class="form-input" id="f-prep" type="number" min="0"
-                 placeholder="Ex : 15"
+                 placeholder="${t('form.prep.placeholder')}"
                  value="${data.prepTime || ''}" />
         </div>
 
         <!-- Temps cuisson -->
         <div class="form-group">
-          <label class="form-label" for="f-cook">Temps de cuisson (min)</label>
+          <label class="form-label" for="f-cook">${t('form.cook.label')}</label>
           <input class="form-input" id="f-cook" type="number" min="0"
-                 placeholder="Ex : 30"
+                 placeholder="${t('form.cook.placeholder')}"
                  value="${data.cookTime || ''}" />
         </div>
 
         <!-- Description -->
         <div class="form-group form-group--full">
-          <label class="form-label" for="f-description">Brève description</label>
+          <label class="form-label" for="f-description">${t('form.desc.label')}</label>
           <textarea class="form-textarea" id="f-description"
-                    placeholder="Un bref résumé de la recette…">${escapeHtml(data.description || '')}</textarea>
+                    placeholder="${t('form.desc.placeholder')}">${escapeHtml(data.description || '')}</textarea>
         </div>
 
         <!-- Image URL -->
         <div class="form-group form-group--full">
-          <label class="form-label" for="f-image">URL de l'image</label>
+          <label class="form-label" for="f-image">${t('form.image.label')}</label>
           <input class="form-input" id="f-image" type="url"
                  placeholder="https://exemple.com/image.jpg"
                  value="${escapeHtml(data.imageUrl || '')}" />
@@ -119,7 +134,7 @@ async function renderAddEditForm(editId = null, prefill = null) {
 
         <!-- Source URL -->
         <div class="form-group form-group--full">
-          <label class="form-label" for="f-source">Source / URL d'origine</label>
+          <label class="form-label" for="f-source">${t('form.source.label')}</label>
           <input class="form-input" id="f-source" type="url"
                  placeholder="https://site-recette.fr/..."
                  value="${escapeHtml(data.sourceUrl || '')}" />
@@ -129,32 +144,32 @@ async function renderAddEditForm(editId = null, prefill = null) {
       <hr class="form-divider" />
 
       <!-- INGRÉDIENTS -->
-      <div class="form-section-title">🥄 Ingrédients</div>
+      <div class="form-section-title">${t('form.ingredients.title')}</div>
       <div class="dynamic-list" id="ingredients-list">
         ${ingredients.map((ing, i) => renderIngredientRow(ing, i)).join('')}
       </div>
       <div style="display:flex; gap:12px; margin-top:8px;">
         <button type="button" class="btn btn--add-item" id="btn-add-ingredient" style="margin-top:0; flex:1;">
-          + Ajouter un ingrédient
+          ${t('form.add.ingredient')}
         </button>
         <button type="button" class="btn btn--add-item" id="btn-add-section" style="margin-top:0; flex:1; background:rgba(245,158,11,0.05); border-color:rgba(245,158,11,0.4); color:var(--accent);">
-          + Ajouter une sous-partie
+          ${t('form.add.section')}
         </button>
       </div>
 
       <hr class="form-divider" />
 
       <!-- ÉTAPES -->
-      <div class="form-section-title">📋 Étapes de préparation</div>
+      <div class="form-section-title">${t('form.steps.title')}</div>
       <div class="dynamic-list" id="steps-list">
         ${steps.map((step, i) => renderStepRow(step, i)).join('')}
       </div>
       <div style="display:flex; gap:12px; margin-top:8px;">
         <button type="button" class="btn btn--add-item" id="btn-add-step" style="margin-top:0; flex:1;">
-          + Ajouter une étape
+          ${t('form.add.step')}
         </button>
         <button type="button" class="btn btn--add-section" id="btn-add-step-section" style="margin-top:0; flex:1; background:rgba(245,158,11,0.05); border-color:rgba(245,158,11,0.4); color:var(--accent);">
-          + Ajouter une sous-partie
+          ${t('form.add.section')}
         </button>
       </div>
 
@@ -162,9 +177,9 @@ async function renderAddEditForm(editId = null, prefill = null) {
 
       <!-- ACTIONS -->
       <div class="form-actions">
-        <button type="button" class="btn btn--secondary" id="btn-cancel-form">Annuler</button>
+        <button type="button" class="btn btn--secondary" id="btn-cancel-form">${t('form.cancel')}</button>
         <button type="submit" class="btn btn--primary" id="btn-save-recipe">
-          💾 ${isEdit ? 'Mettre à jour' : 'Sauvegarder la recette'}
+          💾 ${isEdit ? t('form.save.edit').replace('💾 ', '') : t('form.save.new').replace('💾 ', '')}
         </button>
       </div>
     </form>
@@ -184,7 +199,7 @@ function renderIngredientRow(value = '', index) {
       </button>
       <input class="form-input dynamic-item-input ingredient-input"
              type="text"
-             placeholder="${isHeader ? 'Ex : Pour la sauce' : 'Ex : 200g de farine'}"
+             placeholder="${isHeader ? t('form.ing.placeholder.header') : t('form.ing.placeholder.item')}"
              value="${escapeHtml(displayValue)}" />
       <button type="button" class="dynamic-item-remove" title="Supprimer" aria-label="Supprimer cet ingrédient">✕</button>
     </div>
@@ -202,7 +217,7 @@ function renderStepRow(value = '', index) {
       </button>
       <span class="step-number-badge" ${isHeader ? 'style="display:none;"' : ''}>${index + 1}</span>
       <textarea class="form-textarea dynamic-item-input step-input list-textarea"
-                placeholder="${isHeader ? 'Ex : Pour la sauce, Préparation de la pâte…' : 'Décrivez cette étape…'}">${escapeHtml(displayValue)}</textarea>
+                placeholder="${isHeader ? t('form.step.placeholder.header') : t('form.step.placeholder.item')}">${escapeHtml(displayValue)}</textarea>
       <button type="button" class="dynamic-item-remove" title="Supprimer" aria-label="Supprimer cette étape">✕</button>
     </div>
   `;
@@ -271,12 +286,12 @@ function bindFormEvents(isEdit) {
         toggleBtn.innerHTML = '🏷️';
         toggleBtn.title = 'Convertir en ingrédient';
         toggleBtn.setAttribute('aria-label', 'Convertir en ingrédient');
-        input.placeholder = 'Ex : Pour la sauce';
+        input.placeholder = t('form.ing.placeholder.header');
       } else {
         toggleBtn.innerHTML = '🥄';
         toggleBtn.title = 'Convertir en sous-partie (titre)';
         toggleBtn.setAttribute('aria-label', 'Convertir en sous-partie');
-        input.placeholder = 'Ex : 200g de farine';
+        input.placeholder = t('form.ing.placeholder.item');
       }
       return;
     }
@@ -306,9 +321,9 @@ function bindFormEvents(isEdit) {
       const input = row.querySelector('.step-input');
       const isHeader = row.classList.toggle('is-header');
       if (isHeader) {
-        input.placeholder = 'Ex : Pour la sauce, Préparation de la pâte…';
+        input.placeholder = t('form.step.placeholder.header');
       } else {
-        input.placeholder = 'Décrivez cette étape…';
+        input.placeholder = t('form.step.placeholder.item');
       }
       refreshStepNumbers();
       return;
@@ -341,13 +356,13 @@ function bindFormEvents(isEdit) {
 
 async function submitRecipeForm(isEdit) {
   if (!currentUser) {
-    showToast("Vous devez être connecté pour sauvegarder une recette.", "error");
+    showToast(t('toast.not.connected'), 'error');
     return;
   }
   
   const title = document.getElementById('f-title').value.trim();
   if (!title) {
-    showToast('Le titre est obligatoire.', 'error');
+    showToast(t('toast.title.required'), 'error');
     document.getElementById('f-title').focus();
     return;
   }
@@ -371,13 +386,13 @@ async function submitRecipeForm(isEdit) {
   const existingId = document.getElementById('recipe-id').value;
   const btnSave = document.getElementById('btn-save-recipe');
   const originalText = btnSave.innerHTML;
-  btnSave.innerHTML = '⏳ Sauvegarde...';
+  btnSave.innerHTML = t('form.saving');
   btnSave.disabled = true;
 
   const recipe = {
     id:           existingId || '',
     title,
-    category:     document.getElementById('f-category').value || 'Autres',
+    category:     document.getElementById('f-category').value || (getLang() === 'en' ? 'Others' : 'Autres'),
     author:       document.getElementById('f-author').value.trim(),
     description:  document.getElementById('f-description').value.trim(),
     imageUrl:     document.getElementById('f-image').value.trim(),
@@ -391,20 +406,19 @@ async function submitRecipeForm(isEdit) {
   };
 
   // Si c'est une modification, on force le recalcul de la nutrition au prochain affichage
-  // en effaçant les anciennes valeurs (car les ingrédients ont pu changer)
   if (existingId) {
     recipe.nutrition = null;
   }
 
-  if (!recipe.id) delete recipe.id; // Let Firestore generate ID
+  if (!recipe.id) delete recipe.id;
 
   try {
     await saveRecipe(recipe);
-    showToast(isEdit ? 'Recette mise à jour !' : 'Recette sauvegardée !', 'success');
+    showToast(isEdit ? t('toast.updated') : t('toast.saved'), 'success');
     await renderRecipeGrid();
     setActiveTab('home');
   } catch (err) {
-    showToast('Erreur: ' + err.message, 'error');
+    showToast(t('toast.error.generic') + err.message, 'error');
     btnSave.innerHTML = originalText;
     btnSave.disabled = false;
   }

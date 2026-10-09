@@ -77,21 +77,22 @@ async function translateWithGemini(recipe, apiKey) {
 
 async function renderImportPage() {
   const app = document.getElementById('app');
+  const urlPlaceholder = getLang() === 'en' ? 'https://www.allrecipes.com/recipe/...' : 'https://www.marmiton.org/recettes/...';
   app.innerHTML = `
-    <h1 class="form-page-title">🔗 Importer une recette</h1>
+    <h1 class="form-page-title">🔗 ${t('import.title')} <span>${t('import.title.span')}</span></h1>
     <div class="import-container">
       <div id="server-badge" style="margin-bottom:20px;"><span style="font-size:0.82rem;color:var(--text-dim);">⏳ Vérification du serveur…</span></div>
       <div class="import-card" id="import-url-card">
         <div class="import-card-header">
           <span class="import-card-icon">🌐</span>
           <div>
-            <div class="import-card-title">Depuis un site web</div>
+            <div class="import-card-title">${getLang() === 'en' ? 'From a website' : 'Depuis un site web'}</div>
             <div class="import-card-sub" id="url-card-sub">Marmiton, 750g, AllRecipes, BBC Food…</div>
           </div>
         </div>
         <div class="import-row">
-          <input class="form-input" type="url" id="url-input" placeholder="https://www.marmiton.org/recettes/..." />
-          <button class="btn btn--primary" id="btn-import-url">Importer</button>
+          <input class="form-input" type="url" id="url-input" placeholder="${urlPlaceholder}" />
+          <button class="btn btn--primary" id="btn-import-url">${t('import.btn')}</button>
         </div>
         <div id="url-status" style="display:none"></div>
         <div id="url-preview" style="display:none"></div>
@@ -100,13 +101,13 @@ async function renderImportPage() {
         <div class="import-card-header">
           <span class="import-card-icon">🎵</span>
           <div>
-            <div class="import-card-title">Depuis TikTok</div>
-            <div class="import-card-sub">Extrait la recette de la description de la vidéo</div>
+            <div class="import-card-title">${t('import.tiktok.title')}</div>
+            <div class="import-card-sub">${getLang() === 'en' ? 'Extracts the recipe from the video description' : 'Extrait la recette de la description de la vidéo'}</div>
           </div>
         </div>
         <div class="import-row">
           <input class="form-input" type="url" id="tiktok-input" placeholder="https://www.tiktok.com/@user/video/..." />
-          <button class="btn btn--primary" id="btn-import-tiktok">Importer</button>
+          <button class="btn btn--primary" id="btn-import-tiktok">${t('import.tiktok.btn')}</button>
         </div>
         <div id="tiktok-status" style="display:none"></div>
         <div id="tiktok-preview" style="display:none"></div>
@@ -119,14 +120,16 @@ async function renderImportPage() {
   const subEl = document.getElementById('url-card-sub');
   if (badgeEl) {
     badgeEl.innerHTML = serverOk
-      ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:20px;font-size:0.78rem;color:#22c55e;font-weight:600;"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;"></span>Serveur Puppeteer actif — tous les sites supportés ✅</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:20px;font-size:0.78rem;color:#fbbf24;font-weight:600;"><span style="width:7px;height:7px;border-radius:50%;background:#fbbf24;display:inline-block;"></span>Mode proxy — lancez <em>Démarrer le serveur.bat</em> pour Marmiton</span>`;
+      ? `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);border-radius:20px;font-size:0.78rem;color:#22c55e;font-weight:600;"><span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;"></span>${getLang() === 'en' ? 'Puppeteer server active — all sites supported ✅' : 'Serveur Puppeteer actif — tous les sites supportés ✅'}</span>`
+      : `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 14px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:20px;font-size:0.78rem;color:#fbbf24;font-weight:600;"><span style="width:7px;height:7px;border-radius:50%;background:#fbbf24;display:inline-block;"></span>${getLang() === 'en' ? 'Proxy mode — launch <em>Start server.bat</em> for Marmiton' : 'Mode proxy — lancez <em>Démarrer le serveur.bat</em> pour Marmiton'}</span>`;
   }
-  if (subEl) subEl.textContent = serverOk ? 'Marmiton, 750g, AllRecipes, BBC Food et tous les autres ✅' : 'AllRecipes, BBC Food, SimplyRecipes… (Marmiton nécessite le serveur)';
+  if (subEl) subEl.textContent = serverOk
+    ? (getLang() === 'en' ? 'Marmiton, 750g, AllRecipes, BBC Food and all others ✅' : 'Marmiton, 750g, AllRecipes, BBC Food et tous les autres ✅')
+    : (getLang() === 'en' ? 'AllRecipes, BBC Food, SimplyRecipes… (Marmiton requires the server)' : 'AllRecipes, BBC Food, SimplyRecipes… (Marmiton nécessite le serveur)');
 
-  document.getElementById('btn-import-url').addEventListener('click', () => { const url = document.getElementById('url-input').value.trim(); if (!url) { showToast('Veuillez entrer une URL.', 'error'); return; } importFromUrl(url); });
+  document.getElementById('btn-import-url').addEventListener('click', () => { const url = document.getElementById('url-input').value.trim(); if (!url) { showToast(getLang() === 'en' ? 'Please enter a URL.' : 'Veuillez entrer une URL.', 'error'); return; } importFromUrl(url); });
   document.getElementById('url-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('btn-import-url').click(); });
-  document.getElementById('btn-import-tiktok').addEventListener('click', () => { const url = document.getElementById('tiktok-input').value.trim(); if (!url) { showToast('Veuillez entrer une URL TikTok.', 'error'); return; } importFromTikTok(url); });
+  document.getElementById('btn-import-tiktok').addEventListener('click', () => { const url = document.getElementById('tiktok-input').value.trim(); if (!url) { showToast(getLang() === 'en' ? 'Please enter a TikTok URL.' : 'Veuillez entrer une URL TikTok.', 'error'); return; } importFromTikTok(url); });
   document.getElementById('tiktok-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('btn-import-tiktok').click(); });
 }
 

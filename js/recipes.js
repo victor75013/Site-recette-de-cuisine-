@@ -59,12 +59,15 @@ function escapeHtml(str) {
 // ---------- GRILLE ----------
 
 function renderRecipeCard(recipe) {
+  // Utilise les données traduites depuis le cache si disponibles (synchrone)
+  const display = getCachedTranslation(recipe);
+
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
   const timeLabel = formatTime(totalTime);
   const emoji = getCategoryEmoji(recipe.category);
 
   const imageContent = recipe.imageUrl
-    ? `<img class="card-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-image-placeholder" style="display:none">${emoji}</div>`
+    ? `<img class="card-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(display.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-image-placeholder" style="display:none">${emoji}</div>`
     : `<div class="card-image-placeholder">${emoji}</div>`;
 
   const ingCount = recipe.ingredients?.filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#')).length || 0;
@@ -72,20 +75,20 @@ function renderRecipeCard(recipe) {
   const metaItems = [
     timeLabel ? `<span class="meta-item">⏱️ ${timeLabel}</span>` : '',
     recipe.author ? `<span class="meta-item">👤 ${escapeHtml(recipe.author)}</span>` : '',
-    ingCount ? `<span class="meta-item">🥄 ${ingCount} ${getLang() === 'en' ? 'ingr.' : 'ingr.'}</span>` : '',
+    ingCount ? `<span class="meta-item">🥄 ${ingCount} ingr.</span>` : '',
   ].filter(Boolean).join('');
 
   return `
-    <article class="recipe-card" data-id="${recipe.id}" role="button" tabindex="0" aria-label="Voir ${escapeHtml(recipe.title)}">
+    <article class="recipe-card" data-id="${recipe.id}" role="button" tabindex="0" aria-label="${escapeHtml(display.title)}">
       <div class="card-image-wrap">
         ${imageContent}
         <div class="card-overlay">
-          ${recipe.category ? `<span class="card-category">${emoji} ${escapeHtml(recipe.category)}</span>` : ''}
-          <h2 class="card-title">${escapeHtml(recipe.title)}</h2>
+          ${display.category ? `<span class="card-category">${emoji} ${escapeHtml(display.category)}</span>` : ''}
+          <h2 class="card-title">${escapeHtml(display.title)}</h2>
           ${metaItems ? `<div class="card-meta">${metaItems}</div>` : ''}
         </div>
       </div>
-      ${recipe.description ? `<div class="card-desc-strip">${escapeHtml(recipe.description)}</div>` : ''}
+      ${display.description ? `<div class="card-desc-strip">${escapeHtml(display.description)}</div>` : ''}
     </article>
   `;
 }
@@ -114,7 +117,7 @@ async function renderRecipeGrid() {
       <button class="category-link ${!currentCategoryFilter ? 'active' : ''}" data-category="">${t('category.all')}</button>
       ${categories.map(c => `
         <button class="category-link ${currentCategoryFilter === c ? 'active' : ''}" data-category="${escapeHtml(c)}">
-          ${escapeHtml(c.toUpperCase())}
+          ${escapeHtml(translateCategory(c).toUpperCase())}
         </button>
       `).join('')}
     </nav>
@@ -199,13 +202,20 @@ async function updateRecipeGrid() {
 
   if (currentAuthorFilter) recipes = recipes.filter(r => r.author === currentAuthorFilter);
   if (searchQuery) {
-    recipes = recipes.filter(r =>
-      r.title?.toLowerCase().includes(searchQuery) ||
-      r.description?.toLowerCase().includes(searchQuery) ||
-      r.category?.toLowerCase().includes(searchQuery) ||
-      r.author?.toLowerCase().includes(searchQuery) ||
-      r.ingredients?.some(i => i.toLowerCase().includes(searchQuery))
-    );
+    recipes = recipes.filter(r => {
+      const trans = typeof getCachedTranslation === 'function' ? getCachedTranslation(r) : r;
+      return (
+        r.title?.toLowerCase().includes(searchQuery) ||
+        r.description?.toLowerCase().includes(searchQuery) ||
+        r.category?.toLowerCase().includes(searchQuery) ||
+        r.author?.toLowerCase().includes(searchQuery) ||
+        r.ingredients?.some(i => i.toLowerCase().includes(searchQuery)) ||
+        trans.title?.toLowerCase().includes(searchQuery) ||
+        trans.description?.toLowerCase().includes(searchQuery) ||
+        trans.category?.toLowerCase().includes(searchQuery) ||
+        trans.ingredients?.some(i => i.toLowerCase().includes(searchQuery))
+      );
+    });
   }
   if (categoryFilter) recipes = recipes.filter(r => r.category === categoryFilter);
 
@@ -222,6 +232,11 @@ async function updateRecipeGrid() {
   `;
 
   grid.innerHTML = recipes.length > 0 ? recipes.map(renderRecipeCard).join('') : emptyState;
+
+  // Lancer la traduction d'arrière-plan des recettes visibles si la langue est en anglais
+  if (typeof translateVisibleRecipes === 'function' && typeof getLang === 'function' && getLang() === 'en' && recipes.length > 0) {
+    translateVisibleRecipes(recipes);
+  }
 }
 
 // ---------- HELPERS MODE LIVRE / SIMPLISSIME ----------
@@ -301,10 +316,26 @@ async function openRecipeDetail(id) {
 
   const overlay = document.getElementById('modal-overlay');
   const content = document.getElementById('modal-content');
+
+  // Ouvrir le modal immédiatement avec un spinner pendant la traduction
+  if (getLang() === 'en') {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    content.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;">
+        <span class="spinner" style="width:36px;height:36px;"></span>
+        <p style="color:var(--text-muted);font-size:0.95rem;">Translating recipe…</p>
+      </div>
+    `;
+  }
+  // Traduire la recette si nécessaire (async, avec cache)
+  const displayRecipe = await translateRecipeForDisplay(recipe);
+
   const viewMode = localStorage.getItem('recipe_view_mode') || 'cookbook';
 
-  const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
-  const emoji = getCategoryEmoji(recipe.category);
+  const totalTime = (displayRecipe.prepTime || 0) + (displayRecipe.cookTime || 0);
+  const emoji = getCategoryEmoji(recipe.category); // emoji basé sur catégorie originale (fiable)
 
   // Actions d'en-tête (Bouton de bascule de vue)
   const headerActionsHtml = `
@@ -315,12 +346,18 @@ async function openRecipeDetail(id) {
     </div>
   `;
 
+  // --- Utiliser displayRecipe pour l'affichage ---
+  const recipe_orig = recipe; // garder référence originale pour actions (id, etc.)
+  // eslint-disable-next-line no-param-reassign
+  // On réassigne recipe à displayRecipe pour simplifier le code ci-dessous
+  const r = displayRecipe;
+
   if (viewMode === 'cookbook') {
     // RENDU MODE LIVRE DE CUISINE (SIMPLISSIME)
-    const { mainTitle, subtitle } = splitRecipeTitle(recipe.title, recipe.description);
+    const { mainTitle, subtitle } = splitRecipeTitle(r.title, r.description);
     
     // Ingrédients sous forme de grille visuelle
-    const ingredientsGridHtml = (recipe.ingredients || []).map(ing => {
+    const ingredientsGridHtml = (r.ingredients || []).map(ing => {
       const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
       if (isHeader) {
         const title = ing.trim().replace(/^#+\s*/, '').trim();
@@ -338,7 +375,7 @@ async function openRecipeDetail(id) {
     // Traitement des étapes et astuces
     let stepsList = [];
     let tipText = '';
-    (recipe.steps || []).forEach(step => {
+    (r.steps || []).forEach(step => {
       if (step.toLowerCase().startsWith('astuce') || step.toLowerCase().startsWith('conseil') || step.toLowerCase().startsWith('tip') || step.toLowerCase().startsWith('note')) {
         tipText = step;
       } else {
@@ -362,26 +399,26 @@ async function openRecipeDetail(id) {
       `;
     }).join('');
 
-    const servUnit = recipe.servingsUnit || t('unit.people');
+    const servUnit = r.servingsUnit || t('unit.people');
     const metaItems = [
-      recipe.servings ? `<span class="cookbook-meta-item">${t('detail.for')} <strong>${recipe.servings} ${servUnit.toUpperCase()}</strong></span>` : '',
-      recipe.prepTime ? `<span class="cookbook-meta-item">${t('detail.prep')} <strong>${formatTime(recipe.prepTime)}</strong></span>` : '',
-      recipe.cookTime ? `<span class="cookbook-meta-item">${t('detail.cook')} <strong>${formatTime(recipe.cookTime)}</strong></span>` : '',
+      r.servings ? `<span class="cookbook-meta-item">${t('detail.for')} <strong>${r.servings} ${servUnit.toUpperCase()}</strong></span>` : '',
+      r.prepTime ? `<span class="cookbook-meta-item">${t('detail.prep')} <strong>${formatTime(r.prepTime)}</strong></span>` : '',
+      r.cookTime ? `<span class="cookbook-meta-item">${t('detail.cook')} <strong>${formatTime(r.cookTime)}</strong></span>` : '',
     ].filter(Boolean).join(' &nbsp;•&nbsp; ');
 
-    const imageHeader = recipe.imageUrl ? `
+    const imageHeader = r.imageUrl ? `
       <div class="detail-image-wrap" style="height:220px;">
-        <img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.style.display='none'" />
+        <img class="detail-image" src="${escapeHtml(r.imageUrl)}" alt="${escapeHtml(r.title)}" onerror="this.style.display='none'" />
         <div class="detail-image-overlay"></div>
       </div>
     ` : '';
 
-    const ingCount = (recipe.ingredients || []).filter(i => !i.trim().startsWith('#')).length;
+    const ingCount = (r.ingredients || []).filter(i => !i.trim().startsWith('#')).length;
 
     content.innerHTML = `
       ${headerActionsHtml}
       ${imageHeader}
-      <div class="cookbook-container" ${recipe.imageUrl ? 'style="margin-top:-40px;position:relative;z-index:2;"' : ''}>
+      <div class="cookbook-container" ${r.imageUrl ? 'style="margin-top:-40px;position:relative;z-index:2;"' : ''}>
         <div class="cookbook-header">
           <h2 class="cookbook-title">${escapeHtml(mainTitle)}</h2>
           ${subtitle ? `<div class="cookbook-subtitle">${escapeHtml(subtitle)}</div>` : ''}
@@ -397,7 +434,7 @@ async function openRecipeDetail(id) {
         ` : ''}
 
         <div id="nutrition-container">
-          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === t('unit.people') || recipe.servingsUnit === t('unit.portions') || recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>${t('detail.nutrition.analysis')}</span></div>` : '')}
+          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>${t('detail.nutrition.analysis')}</span></div>` : '')}
         </div>
 
         ${stepsHtml ? `
@@ -414,9 +451,9 @@ async function openRecipeDetail(id) {
           </div>
         ` : ''}
 
-        ${recipe.sourceUrl ? `
+        ${r.sourceUrl ? `
           <div class="detail-source" style="margin-bottom:24px;">
-            ${t('detail.source')} <a href="${escapeHtml(recipe.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(recipe.sourceUrl)}</a>
+            ${t('detail.source')} <a href="${escapeHtml(r.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(r.sourceUrl)}</a>
           </div>
         ` : ''}
 
@@ -429,12 +466,12 @@ async function openRecipeDetail(id) {
 
   } else {
     // RENDU MODE CLASSIQUE
-    const imageSection = recipe.imageUrl
-      ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
+    const imageSection = r.imageUrl
+      ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(r.imageUrl)}" alt="${escapeHtml(r.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
       : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
 
-    const actualIngredients = (recipe.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
-    const ingredientsHtml = (recipe.ingredients || []).map(ing => {
+    const actualIngredients = (r.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
+    const ingredientsHtml = (r.ingredients || []).map(ing => {
       const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
       if (isHeader) {
         const title = ing.trim().replace(/^#+\s*/, '').trim();
@@ -444,7 +481,7 @@ async function openRecipeDetail(id) {
     }).join('');
 
     let stepNumClassic = 1;
-    const stepsHtml = (recipe.steps || []).map((step) => {
+    const stepsHtml = (r.steps || []).map((step) => {
       const isHeader = typeof step === 'string' && step.trim().startsWith('#');
       if (isHeader) {
         const title = step.trim().replace(/^#+\s*/, '').trim();
@@ -455,25 +492,25 @@ async function openRecipeDetail(id) {
     }).join('');
 
     const badges = [
-      recipe.category ? `<span class="badge badge--category">${getCategoryEmoji(recipe.category)} ${escapeHtml(recipe.category)}</span>` : '',
-      recipe.author ? `<span class="badge badge--author">👤 ${escapeHtml(recipe.author)}</span>` : '',
-      recipe.prepTime ? `<span class="badge badge--time">${t('badge.prep')}${formatTime(recipe.prepTime)}</span>` : '',
-      recipe.cookTime ? `<span class="badge badge--time">${t('badge.cook')}${formatTime(recipe.cookTime)}</span>` : '',
+      r.category ? `<span class="badge badge--category">${getCategoryEmoji(recipe.category)} ${escapeHtml(r.category)}</span>` : '',
+      r.author ? `<span class="badge badge--author">👤 ${escapeHtml(r.author)}</span>` : '',
+      r.prepTime ? `<span class="badge badge--time">${t('badge.prep')}${formatTime(r.prepTime)}</span>` : '',
+      r.cookTime ? `<span class="badge badge--time">${t('badge.cook')}${formatTime(r.cookTime)}</span>` : '',
       totalTime > 0 ? `<span class="badge badge--time">${t('badge.total')}${formatTime(totalTime)}</span>` : '',
-      recipe.servings ? `<span class="badge badge--servings">${formatServings(recipe.servings, recipe.servingsUnit)}</span>` : '',
+      r.servings ? `<span class="badge badge--servings">${formatServings(r.servings, r.servingsUnit)}</span>` : '',
     ].filter(Boolean).join('');
 
     content.innerHTML = `
       ${headerActionsHtml}
       ${imageSection}
       <div class="detail-body">
-        <h2 class="detail-title">${escapeHtml(recipe.title)}</h2>
+        <h2 class="detail-title">${escapeHtml(r.title)}</h2>
         <div class="detail-badges">${badges}</div>
-        ${recipe.description ? `<p class="detail-description">${escapeHtml(recipe.description)}</p>` : ''}
+        ${r.description ? `<p class="detail-description">${escapeHtml(r.description)}</p>` : ''}
 
         <div id="nutrition-container">
           <!-- Rempli asynchrone par nutrition.js -->
-          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' || recipe.servingsUnit === t('unit.people') || recipe.servingsUnit === t('unit.portions') ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>${t('detail.nutrition.analysis')}</span></div>` : '')}
+          ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, r.servingsUnit === 'personnes' || r.servingsUnit === 'portions' || r.servingsUnit === t('unit.people') || r.servingsUnit === t('unit.portions') ? r.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>${t('detail.nutrition.analysis')}</span></div>` : '')}
         </div>
 
         ${ingredientsHtml ? `
@@ -490,9 +527,9 @@ async function openRecipeDetail(id) {
           </div>
         ` : ''}
 
-        ${recipe.sourceUrl ? `
+        ${r.sourceUrl ? `
           <div class="detail-source">
-            ${t('detail.source')} <a href="${escapeHtml(recipe.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(recipe.sourceUrl)}</a>
+            ${t('detail.source')} <a href="${escapeHtml(r.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(r.sourceUrl)}</a>
           </div>
         ` : ''}
 
@@ -504,9 +541,12 @@ async function openRecipeDetail(id) {
     `;
   }
 
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
+  // Ouvrir le modal seulement si pas déjà ouvert (cas EN où on l'a ouvert avant)
+  if (!overlay.classList.contains('open')) {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
 
   // Gestion du bouton de bascule de vue
   document.getElementById('btn-toggle-view')?.addEventListener('click', () => {
@@ -520,7 +560,7 @@ async function openRecipeDetail(id) {
   if (nutritionContainer && recipe.ingredients?.length) {
     if (hasValidNutrition(recipe)) {
       nutritionContainer.innerHTML = renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0);
-    } else {
+    } else if (!nutritionContainer.innerHTML.includes('spinner') || nutritionContainer.innerHTML === '') {
       const realIngredients = (recipe.ingredients || []).filter(i => typeof i === 'string' && !i.trim().startsWith('#'));
 
       if (realIngredients.length === 0) {
@@ -573,8 +613,9 @@ async function openRecipeDetail(id) {
   });
 
   document.getElementById('btn-delete-recipe')?.addEventListener('click', async () => {
-    if (confirm(`${t('detail.delete.confirm')} "${recipe.title}" ?`)) {
+    if (confirm(`${t('detail.delete.confirm')} "${r.title}" ?`)) {
       try {
+        clearRecipeTranslation(recipe.id); // vider le cache si on supprime
         await deleteRecipe(recipe.id);
         closeModal();
         await renderRecipeGrid();

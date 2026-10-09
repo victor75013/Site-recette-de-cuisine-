@@ -389,10 +389,13 @@ async function submitRecipeForm(isEdit) {
   btnSave.innerHTML = t('form.saving');
   btnSave.disabled = true;
 
+  const rawCat = document.getElementById('f-category').value;
+  const canonicalCat = (typeof CATEGORY_EN_TO_FR !== 'undefined' ? (CATEGORY_EN_TO_FR[rawCat] || rawCat) : rawCat) || 'Autres';
+
   const recipe = {
     id:           existingId || '',
     title,
-    category:     document.getElementById('f-category').value || (getLang() === 'en' ? 'Others' : 'Autres'),
+    category:     canonicalCat,
     author:       document.getElementById('f-author').value.trim(),
     description:  document.getElementById('f-description').value.trim(),
     imageUrl:     document.getElementById('f-image').value.trim(),
@@ -405,9 +408,12 @@ async function submitRecipeForm(isEdit) {
     steps,
   };
 
-  // Si c'est une modification, on force le recalcul de la nutrition au prochain affichage
+  // Si c'est une modification, on force le recalcul de la nutrition et on vide le cache de traduction
   if (existingId) {
     recipe.nutrition = null;
+    if (typeof clearRecipeTranslation === 'function') {
+      clearRecipeTranslation(existingId);
+    }
   }
 
   if (!recipe.id) delete recipe.id;

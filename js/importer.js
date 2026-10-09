@@ -63,6 +63,13 @@ async function translateRecipeIfNeeded(recipe, statusEl) {
       return await translateWithGemini(recipe, settings.geminiApiKey);
     } catch (err) { console.warn('[Translate] Gemini échoué:', err.message); }
   }
+  // Fallback client-side Google Translate
+  try {
+    if (typeof translateRecipeViaGoogle === 'function') {
+      if (statusEl) statusEl.innerHTML = statusHtml('loading', '🌐 Traduction automatique…');
+      return await translateRecipeViaGoogle(recipe, 'fr');
+    }
+  } catch (err) { console.warn('[Translate] Client fallback échoué:', err.message); }
   return recipe;
 }
 

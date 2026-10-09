@@ -50,9 +50,17 @@ function checkFileProtocolWarning() {
 async function init() {
   initTheme();
   updateNavLabels();
+  if (typeof updateLangToggleBtn === 'function') updateLangToggleBtn();
   bindNavigation();
   bindModalClose();
   checkFileProtocolWarning();
+
+  const langToggleBtn = document.getElementById('lang-toggle-btn');
+  if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+      setLang(getLang() === 'fr' ? 'en' : 'fr');
+    });
+  }
   
   const authBtn = document.getElementById('nav-auth');
   const logoutBtn = document.getElementById('nav-logout');

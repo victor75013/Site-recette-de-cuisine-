@@ -107,19 +107,29 @@ app.post('/scrape', async (req, res) => {
 });
 
 app.post('/translate', async (req, res) => {
-  const { recipe } = req.body;
+  const { recipe, targetLang = 'fr' } = req.body;
   if (!recipe) return res.status(400).json({ error: 'recipe manquante' });
   try {
     const sampleText = recipe.title || recipe.description || '';
     const lang = await detectLanguage(sampleText);
-    if (lang === 'fr') { console.log(`[Translate] Déjà en français`); return res.json({ recipe, translated: false, lang }); }
-    console.log(`[Translate] ${lang} → fr : "${recipe.title}"`);
-    const [title, description, ...ingredientsTranslated] = await Promise.all([translateText(recipe.title), translateText(recipe.description), ...(recipe.ingredients || []).map(i => translateText(i))]);
-    const steps = await Promise.all((recipe.steps || []).map(s => translateText(s)));
+    if (lang === targetLang) {
+      console.log(`[Translate] Déjà en ${targetLang}`);
+      return res.json({ recipe, translated: false, lang });
+    }
+    console.log(`[Translate] ${lang} → ${targetLang} : "${recipe.title}"`);
+    const [title, description, ...ingredientsTranslated] = await Promise.all([
+      translateText(recipe.title, targetLang),
+      translateText(recipe.description, targetLang),
+      ...(recipe.ingredients || []).map(i => translateText(i, targetLang)),
+    ]);
+    const steps = await Promise.all((recipe.steps || []).map(s => translateText(s, targetLang)));
     const translatedRecipe = { ...recipe, title, description, ingredients: ingredientsTranslated, steps };
     console.log(`[Translate OK] "${title}"`);
-    res.json({ recipe: translatedRecipe, translated: true, lang });
-  } catch (err) { console.error(`[Erreur translate] ${err.message}`); res.json({ recipe, translated: false, lang: 'unknown', error: err.message }); }
+    res.json({ recipe: translatedRecipe, translated: true, lang, targetLang });
+  } catch (err) {
+    console.error(`[Erreur translate] ${err.message}`);
+    res.json({ recipe, translated: false, lang: 'unknown', error: err.message });
+  }
 });
 
 app.get('/ping', (req, res) => res.json({ ok: true }));

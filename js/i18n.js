@@ -38,6 +38,7 @@ const TRANSLATIONS = {
     // Recipe detail
     'detail.edit':        '✏️ Modifier',
     'detail.delete':      '🗑️ Supprimer',
+    'detail.delete.confirm': 'Voulez-vous vraiment supprimer',
     'detail.view.classic':'🎨 Vue Classique',
     'detail.view.cookbook':'📖 Mode Livre',
     'detail.ingredients': 'Ingrédients',
@@ -225,6 +226,7 @@ const TRANSLATIONS = {
     // Recipe detail
     'detail.edit':        '✏️ Edit',
     'detail.delete':      '🗑️ Delete',
+    'detail.delete.confirm': 'Are you sure you want to delete',
     'detail.view.classic':'🎨 Classic View',
     'detail.view.cookbook':'📖 Cookbook Mode',
     'detail.ingredients': 'Ingredients',
@@ -389,8 +391,23 @@ function setLang(lang) {
   localStorage.setItem('lang', lang);
   document.documentElement.setAttribute('lang', lang);
   updateNavLabels();
+  updateLangToggleBtn();
   if (typeof navigateTo === 'function' && typeof currentTab !== 'undefined') {
     navigateTo(currentTab);
+  }
+}
+
+function updateLangToggleBtn() {
+  const btn = document.getElementById('lang-toggle-btn');
+  if (!btn) return;
+  if (currentLang === 'en') {
+    btn.innerHTML = '🇫🇷 FR';
+    btn.title = 'Passer en français';
+    btn.setAttribute('aria-label', 'Passer en français');
+  } else {
+    btn.innerHTML = '🇬🇧 EN';
+    btn.title = 'Switch to English';
+    btn.setAttribute('aria-label', 'Switch to English');
   }
 }
 
@@ -429,5 +446,294 @@ function updateNavLabels() {
   });
 }
 
-// Apply lang attribute on load
+// Apply lang attribute and button on load
 document.documentElement.setAttribute('lang', currentLang);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateLangToggleBtn);
+} else {
+  updateLangToggleBtn();
+}
+
+// ─── Traduction des catégories (mapping statique FR ↔ EN) ──────
+const CATEGORY_FR_TO_EN = {
+  'Entrées':        'Starters',
+  'Plats principaux':'Main courses',
+  'Desserts':       'Desserts',
+  'Soupes':         'Soups',
+  'Salades':        'Salads',
+  'Marinades':      'Marinades',
+  'Sauces':         'Sauces',
+  'Petits-déjeuners':'Breakfasts',
+  'Snacks':         'Snacks',
+  'Boissons':       'Drinks',
+  'Autres':         'Others',
+};
+
+const CATEGORY_EN_TO_FR = Object.fromEntries(
+  Object.entries(CATEGORY_FR_TO_EN).map(([k, v]) => [v, k])
+);
+
+/**
+ * Traduit le nom d'une catégorie selon la langue courante.
+ * Les catégories sont stockées en FR dans Firestore.
+ */
+function translateCategory(cat) {
+  if (!cat) return cat;
+  if (currentLang === 'en') return CATEGORY_FR_TO_EN[cat] || cat;
+  return CATEGORY_EN_TO_FR[cat] || cat;
+}
+
+// ─── Cache des traductions de recettes ─────────────────────────
+const RECIPE_TRANS_KEY = 'recipe_trans_en_v1';
+
+function getTranslationCache() {
+  try { return JSON.parse(localStorage.getItem(RECIPE_TRANS_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function setTranslationCache(cache) {
+  try { localStorage.setItem(RECIPE_TRANS_KEY, JSON.stringify(cache)); }
+  catch (e) { console.warn('[TransCache] Impossible de sauvegarder:', e); }
+}
+
+/** Efface le cache de traduction d'une recette (utile si modifiée). */
+function clearRecipeTranslation(recipeId) {
+  const cache = getTranslationCache();
+  delete cache[recipeId];
+  setTranslationCache(cache);
+}
+
+/**
+ * Traduction de texte unitaire via Google Translate client-side (GTX).
+ */
+async function translateTextClient(text, targetLang = 'en') {
+  if (!text || !text.trim()) return text;
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return text;
+    const data = await res.json();
+    return data[0]?.map(chunk => chunk[0]).join('') || text;
+  } catch {
+    return text;
+  }
+}
+
+/**
+ * Traduction complète et ultra-rapide d'une recette via Google Translate client.
+ * Regroupe tous les champs en une seule requête avec délimiteur.
+ */
+async function translateRecipeViaGoogle(recipe, targetLang = 'en') {
+  const DELIM = '\n=====\n';
+  const ingredients = recipe.ingredients || [];
+  const steps = recipe.steps || [];
+  const items = [
+    recipe.title || '',
+    recipe.description || '',
+    ...ingredients,
+    '___STEPS_DELIM___',
+    ...steps,
+  ];
+
+  try {
+    const joined = items.join(DELIM);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(joined)}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const text = data[0]?.map(chunk => chunk[0]).join('') || '';
+    const parts = text.split(DELIM).map(s => s.trim());
+
+    const sepIdx = parts.indexOf('___STEPS_DELIM___');
+    if (sepIdx !== -1) {
+      const title = parts[0] || recipe.title;
+      const description = parts[1] || recipe.description;
+      const transIngredients = parts.slice(2, sepIdx);
+      const transSteps = parts.slice(sepIdx + 1);
+      return {
+        title,
+        description,
+        ingredients: transIngredients.length ? transIngredients : ingredients,
+        steps: transSteps.length ? transSteps : steps,
+        category: CATEGORY_FR_TO_EN[recipe.category] || recipe.category,
+      };
+    }
+  } catch (err) {
+    console.warn('[translateRecipeViaGoogle] Fetch groupé échoué, essai direct:', err.message);
+  }
+
+  // Fallback direct si découpage échoue
+  try {
+    const [title, description] = await Promise.all([
+      translateTextClient(recipe.title || '', targetLang),
+      translateTextClient(recipe.description || '', targetLang),
+    ]);
+    return {
+      title,
+      description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      category: CATEGORY_FR_TO_EN[recipe.category] || recipe.category,
+    };
+  } catch {
+    return {
+      ...recipe,
+      category: CATEGORY_FR_TO_EN[recipe.category] || recipe.category,
+    };
+  }
+}
+
+/**
+ * Retourne la recette affichée selon la langue courante.
+ * - Si FR : retourne la recette originale.
+ * - Si EN : vérifie le cache puis appelle l'API de traduction si nécessaire.
+ */
+async function translateRecipeForDisplay(recipe) {
+  if (currentLang !== 'en') return recipe;
+  if (!recipe || !recipe.id) return recipe;
+
+  // 1. Vérifier le cache complet
+  const cache = getTranslationCache();
+  if (cache[recipe.id] && cache[recipe.id].ingredients?.length) {
+    return { ...recipe, ...cache[recipe.id] };
+  }
+
+  // 2. Client direct Google Translate (rapide ~0.3s, aucun serveur requis)
+  try {
+    const tr = await translateRecipeViaGoogle(recipe, 'en');
+    if (tr && tr.title) {
+      const fields = _pickTranslatedFields(tr, recipe);
+      cache[recipe.id] = fields;
+      setTranslationCache(cache);
+      return { ...recipe, ...fields };
+    }
+  } catch (e) {
+    console.warn('[Translate] Client failed:', e);
+  }
+
+  // 3. Essayer le serveur local (si démarré)
+  try {
+    const res = await fetch('http://localhost:3001/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipe, targetLang: 'en' }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const tr = data.recipe || {};
+      const fields = _pickTranslatedFields(tr, recipe);
+      cache[recipe.id] = fields;
+      setTranslationCache(cache);
+      return { ...recipe, ...fields };
+    }
+  } catch { /* serveur local indisponible */ }
+
+  // 4. Essayer Gemini API si clé configurée
+  const settings = typeof getSettings === 'function' ? getSettings() : {};
+  if (settings.geminiApiKey) {
+    try {
+      const prompt = `Translate this French recipe to English. Return ONLY valid JSON with translated fields: title, description, ingredients (array), steps (array), category.\n\n${JSON.stringify({
+        title: recipe.title,
+        description: recipe.description,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        category: recipe.category,
+      })}`;
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${settings.geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' },
+          }),
+          signal: AbortSignal.timeout(20000),
+        }
+      );
+      const data = await res.json();
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+      const fields = _pickTranslatedFields(parsed, recipe);
+      cache[recipe.id] = fields;
+      setTranslationCache(cache);
+      return { ...recipe, ...fields };
+    } catch (e) {
+      console.warn('[Translate] Gemini échoué:', e.message);
+    }
+  }
+
+  // 5. Fallback minimal : catégorie uniquement
+  return {
+    ...recipe,
+    category: CATEGORY_FR_TO_EN[recipe.category] || recipe.category,
+  };
+}
+
+/** Extrait et valide les champs traduits pertinents. */
+function _pickTranslatedFields(parsed, original) {
+  return {
+    title:       parsed.title       || original.title,
+    description: parsed.description ?? original.description,
+    ingredients: Array.isArray(parsed.ingredients) && parsed.ingredients.length
+                   ? parsed.ingredients : original.ingredients,
+    steps:       Array.isArray(parsed.steps) && parsed.steps.length
+                   ? parsed.steps : original.steps,
+    category:    parsed.category    || CATEGORY_FR_TO_EN[original.category] || original.category,
+  };
+}
+
+/** Retourne les champs traduits depuis le cache (synchrone, pour les cartes). */
+function getCachedTranslation(recipe) {
+  if (currentLang !== 'en' || !recipe?.id) return recipe;
+  const cache = getTranslationCache();
+  if (cache[recipe.id]) return { ...recipe, ...cache[recipe.id] };
+  // Traduction partielle synchrone : catégorie seulement
+  return { ...recipe, category: CATEGORY_FR_TO_EN[recipe.category] || recipe.category };
+}
+
+/**
+ * Traduit automatiquement en arrière-plan les recettes affichées dans la grille
+ * lorsque la langue est en anglais.
+ */
+let isTranslatingVisible = false;
+
+async function translateVisibleRecipes(recipes) {
+  if (currentLang !== 'en' || !Array.isArray(recipes) || !recipes.length) return;
+  if (isTranslatingVisible) return;
+  isTranslatingVisible = true;
+
+  try {
+    const cache = getTranslationCache();
+    const untranslated = recipes.filter(r => r && r.id && (!cache[r.id] || !cache[r.id].title));
+    if (!untranslated.length) return;
+
+    // Traduction par lots de 3 en parallèle
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < untranslated.length; i += BATCH_SIZE) {
+      if (currentLang !== 'en') break; // arrêt si l'utilisateur a réinitialisé en FR
+      const chunk = untranslated.slice(i, i + BATCH_SIZE);
+      await Promise.all(chunk.map(async (recipe) => {
+        try {
+          const trans = await translateRecipeForDisplay(recipe);
+          if (trans && currentLang === 'en') {
+            const card = document.querySelector(`.recipe-card[data-id="${recipe.id}"]`);
+            if (card) {
+              const titleEl = card.querySelector('.card-title');
+              if (titleEl && trans.title) titleEl.textContent = trans.title;
+              const descEl = card.querySelector('.card-desc-strip');
+              if (descEl && trans.description) descEl.textContent = trans.description;
+              card.setAttribute('aria-label', trans.title || '');
+            }
+          }
+        } catch (e) {
+          console.warn('[translateVisibleRecipes] Erreur:', e);
+        }
+      }));
+    }
+  } finally {
+    isTranslatingVisible = false;
+  }
+}

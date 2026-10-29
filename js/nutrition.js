@@ -323,7 +323,7 @@ function renderNutritionCard(nutrition, servings) {
 
   return `
     <div class="detail-section">
-      <h3 class="detail-section-title">📊 Valeurs nutritionnelles</h3>
+      <h3 class="detail-section-title">Valeurs nutritionnelles</h3>
       <div class="nutrition-card">
         <div class="nutrition-grid">${itemsHtml}</div>
         <div class="nutrition-footer">

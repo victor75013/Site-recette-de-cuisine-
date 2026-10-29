@@ -515,14 +515,14 @@ async function openRecipeDetail(id) {
 
         ${ingredientsHtml ? `
           <div class="detail-section">
-            <h3 class="detail-section-title">🥄 ${t('detail.ingredients')} (${actualIngredients.length})</h3>
+            <h3 class="detail-section-title">${t('detail.ingredients')} (${actualIngredients.length})</h3>
             <ul class="ingredients-list">${ingredientsHtml}</ul>
           </div>
         ` : ''}
 
         ${stepsHtml ? `
           <div class="detail-section">
-            <h3 class="detail-section-title">📋 ${t('detail.steps')}</h3>
+            <h3 class="detail-section-title">${t('detail.steps')}</h3>
             <ol class="steps-list">${stepsHtml}</ol>
           </div>
         ` : ''}

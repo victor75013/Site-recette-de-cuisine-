@@ -86,7 +86,7 @@ async function renderImportPage() {
   const app = document.getElementById('app');
   const urlPlaceholder = getLang() === 'en' ? 'https://www.allrecipes.com/recipe/...' : 'https://www.marmiton.org/recettes/...';
   app.innerHTML = `
-    <h1 class="form-page-title">🔗 ${t('import.title')} <span>${t('import.title.span')}</span></h1>
+    <h1 class="form-page-title">${t('import.title')} <span>${t('import.title.span')}</span></h1>
     <div class="import-container">
       <div id="server-badge" style="margin-bottom:20px;"><span style="font-size:0.82rem;color:var(--text-dim);">⏳ Vérification du serveur…</span></div>
       <div class="import-card" id="import-url-card">
@@ -343,7 +343,7 @@ function showImportPreview(recipe, previewEl, source) {
   const ingredientsHtml = recipe.ingredients?.length ? `<p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:4px;font-weight:600;">INGRÉDIENTS (${recipe.ingredients.length})</p><ul style="list-style:disc;padding-left:20px;font-size:0.85rem;margin-bottom:12px;">${recipe.ingredients.slice(0,8).map(i => `<li>${escapeHtml(i)}</li>`).join('')}${recipe.ingredients.length > 8 ? `<li style="color:var(--text-muted)">…et ${recipe.ingredients.length - 8} autres</li>` : ''}</ul>` : '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun ingrédient extrait — à compléter manuellement.</p>';
   const stepsCount = recipe.steps?.length ? `<p style="font-size:0.82rem;color:var(--text-muted);">${recipe.steps.length} étape(s) extraite(s)</p>` : '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune étape extraite — à compléter manuellement.</p>';
   previewEl.style.display = 'block';
-  previewEl.innerHTML = `<div class="import-preview"><div class="import-preview-title">📋 Aperçu de la recette importée</div>${imgHtml}<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:10px;">${escapeHtml(recipe.title)}</h3>${recipe.description ? `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">${escapeHtml(recipe.description)}</p>` : ''}${ingredientsHtml}${stepsCount}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;"><button class="btn btn--primary" id="btn-save-import">💾 Sauvegarder directement</button><button class="btn btn--secondary" id="btn-edit-import">✏️ Modifier avant de sauvegarder</button></div></div>`;
+  previewEl.innerHTML = `<div class="import-preview"><div class="import-preview-title">Aperçu de la recette importée</div>${imgHtml}<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:10px;">${escapeHtml(recipe.title)}</h3>${recipe.description ? `<p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:12px;">${escapeHtml(recipe.description)}</p>` : ''}${ingredientsHtml}${stepsCount}<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;"><button class="btn btn--primary" id="btn-save-import">Sauvegarder directement</button><button class="btn btn--secondary" id="btn-edit-import">Modifier avant de sauvegarder</button></div></div>`;
   document.getElementById('btn-save-import').addEventListener('click', async () => { 
     if(!currentUser) return showToast("Vous devez être connecté", "error");
     const newRecipe = { ...recipe }; 

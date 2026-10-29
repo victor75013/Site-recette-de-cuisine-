@@ -1,0 +1,8 @@
+/* ============================================================
+   style.css — Index CSS modulaire
+   ============================================================ */
+
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+@import './pages.css';

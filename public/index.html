@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <!-- A11y Point 26: Viewport responsive sans blocage de zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Carnet de Recettes</title>
+  <meta name="description" content="Centralisez et gérez toutes vos recettes de cuisine en un seul endroit." />
+
+  <!-- PWA & Icônes optimisées -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f6f3eb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Recettes" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png" />
+
+  <!-- Google Fonts : Inter (300;400;500;600;700 allégé) & League Gothic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=League+Gothic&display=swap" rel="stylesheet" />
+
+  <!-- Anti-flash thème : applique le thème avant le rendu -->
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+    })();
+  </script>
+
+  <!-- Feuilles de styles modulaires -->
+  <link rel="stylesheet" href="css/tokens.css?v=30" />
+  <link rel="stylesheet" href="css/base.css?v=30" />
+  <link rel="stylesheet" href="css/components.css?v=30" />
+  <link rel="stylesheet" href="css/pages.css?v=30" />
+</head>
+<body>
+
+  <!-- ====== HEADER / NAVIGATION ====== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="logo.png" alt="Logo" class="brand-icon" />
+        <span class="brand-name">Carnet de Recettes</span>
+      </div>
+      <div class="u-flex u-gap-md" style="align-items: center;">
+        <nav class="nav" id="main-nav" aria-label="Navigation principale">
+          <button class="nav-btn active" data-tab="home" id="nav-home">
+            Mes Recettes
+          </button>
+          <button class="nav-btn" data-tab="add" id="nav-add">
+            Ajouter
+          </button>
+          <button class="nav-btn" data-tab="import" id="nav-import">
+            Importer
+          </button>
+          <button class="nav-btn" data-tab="sites" id="nav-sites">
+            Sites
+          </button>
+          <button class="nav-btn nav-btn--settings" data-tab="settings" id="nav-settings" title="Paramètres" aria-label="Paramètres">
+            ⚙️
+          </button>
+          <button class="lang-toggle" id="lang-toggle-btn" title="Changer de langue / Switch language" aria-label="Changer de langue">
+            🇬🇧 EN
+          </button>
+          <button class="theme-toggle" id="theme-toggle-btn" title="Changer de thème" aria-label="Basculer thème clair/sombre">
+            🌙
+          </button>
+        </nav>
+        <div class="auth-section">
+          <button class="btn btn--sm btn--secondary u-hidden" id="nav-auth">
+            Se connecter
+          </button>
+          <div id="user-info" class="auth-user-info">
+            <img id="user-avatar" src="" alt="Avatar" class="auth-user-avatar" />
+            <button class="btn btn--sm btn--danger" id="nav-logout">Quitter</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main">
+    <div id="app">
+      <!-- Contenu dynamique injecté par JavaScript -->
+    </div>
+  </main>
+
+  <!-- ====== MODAL détail recette (Accessible Point 28) ====== -->
+  <div class="modal-overlay" id="modal-overlay" aria-hidden="true">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" aria-label="Fermer la boîte de dialogue">✕</button>
+      <div class="modal-content" id="modal-content">
+        <!-- Fiche détail injectée ici -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== TOAST NOTIFICATIONS ====== -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <!-- ====== BOTTOM NAV MOBILE ====== -->
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Navigation mobile">
+    <button class="bottom-nav-btn active" data-tab="home" id="bnav-home">
+      <span class="bottom-nav-icon">📖</span>
+      <span class="bottom-nav-label">Recettes</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="add" id="bnav-add">
+      <span class="bottom-nav-icon">✏️</span>
+      <span class="bottom-nav-label">Ajouter</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="import" id="bnav-import">
+      <span class="bottom-nav-icon">🔗</span>
+      <span class="bottom-nav-label">Importer</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="sites" id="bnav-sites">
+      <span class="bottom-nav-icon">🌍</span>
+      <span class="bottom-nav-label">Sites</span>
+    </button>
+    <button class="bottom-nav-btn" data-tab="settings" id="bnav-settings">
+      <span class="bottom-nav-icon">⚙️</span>
+      <span class="bottom-nav-label">Réglages</span>
+    </button>
+    <button class="bottom-nav-btn" id="bnav-theme" aria-label="Basculer thème">
+      <span class="bottom-nav-icon" id="bnav-theme-icon">🌙</span>
+      <span class="bottom-nav-label">Thème</span>
+    </button>
+  </nav>
+
+  <!-- ====== FIREBASE COMPAT SDK ====== -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
+
+  <!-- ====== APPLICATION JS (Point 6: ES MODULES) ====== -->
+  <script type="module" src="js/app.js?v=30"></script>
+
+  <!-- Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => {
+          reg.update();
+        })
+        .catch(err => console.warn('⚠️ SW:', err));
+    }
+  </script>
+</body>
+</html>

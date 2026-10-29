@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Sécurisation de la collection des recettes :
+    // - Lecture autorisée à tous (ou restreinte aux utilisateurs authentifiés selon le besoin)
+    // - Écriture réservée aux utilisateurs authentifiés, avec validation du créateur
+    match /recipes/{recipeId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        request.resource.data.createdBy == request.auth.uid
+      );
+    }
+  }
+}

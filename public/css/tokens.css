@@ -1,0 +1,80 @@
+/* ============================================================
+   tokens.css — Design Tokens, Variables & Thèmes
+   ============================================================ */
+
+:root {
+  --bg: #f6f3eb;
+  --bg-2: #ede8dc;
+  --surface: #ffffff;
+  --surface-2: #f2ede3;
+  --border: #dfd7c9;
+  --border-subtle: #eae3d7;
+  --primary: #1f1c18;
+  --primary-dark: #12100e;
+  --primary-glow: rgba(31, 28, 24, 0.08);
+  --accent: #9c7753;
+  --accent-glow: rgba(156, 119, 83, 0.15);
+  --grad: linear-gradient(135deg, #2b2723, #191714);
+  --text: #1c1917;
+  --text-muted: #686157;
+  --text-dim: #999082;
+  --success: #2d6a4f;
+  --danger: #b91c1c;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 2px 8px rgba(35, 30, 22, 0.04);
+  --shadow: 0 6px 20px rgba(35, 30, 22, 0.06);
+  --shadow-lg: 0 16px 44px rgba(35, 30, 22, 0.1);
+  --glow: 0 0 30px rgba(156, 119, 83, 0.12);
+  --transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'League Gothic', Impact, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg: #f6f3eb;
+  --bg-2: #ede8dc;
+  --surface: #ffffff;
+  --surface-2: #f2ede3;
+  --border: #dfd7c9;
+  --border-subtle: #eae3d7;
+  --primary: #1f1c18;
+  --primary-dark: #12100e;
+  --primary-glow: rgba(31, 28, 24, 0.08);
+  --accent: #9c7753;
+  --accent-glow: rgba(156, 119, 83, 0.15);
+  --grad: linear-gradient(135deg, #2b2723, #191714);
+  --text: #1c1917;
+  --text-muted: #686157;
+  --text-dim: #999082;
+  --success: #2d6a4f;
+  --danger: #b91c1c;
+  --shadow-sm: 0 2px 8px rgba(35, 30, 22, 0.04);
+  --shadow: 0 6px 20px rgba(35, 30, 22, 0.06);
+  --shadow-lg: 0 16px 44px rgba(35, 30, 22, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg: #141210;
+  --bg-2: #1b1815;
+  --surface: #211e1a;
+  --surface-2: #28241f;
+  --border: #363029;
+  --border-subtle: #2d2822;
+  --primary: #f5f2eb;
+  --primary-dark: #e8e2d4;
+  --primary-glow: rgba(245, 242, 235, 0.12);
+  --accent: #c49a6c;
+  --accent-glow: rgba(196, 154, 108, 0.2);
+  --grad: linear-gradient(135deg, #f5f2eb, #d9caa7);
+  --text: #f7f4ee;
+  --text-muted: #b0a597;
+  --text-dim: #756d62;
+  --success: #52b788;
+  --danger: #ef4444;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.65);
+  --glow: 0 0 40px rgba(196, 154, 108, 0.15);
+}

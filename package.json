@@ -1,15 +1,20 @@
 {
   "name": "application-recette-de-cuisine",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Carnet de recettes personnel",
-  "main": "server.js",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test tests/utils.test.js tests/i18n.test.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": [
+    "recettes",
+    "cuisine",
+    "pwa"
+  ],
+  "author": "Victor",
+  "license": "MIT",
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",

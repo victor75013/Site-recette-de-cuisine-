@@ -189,11 +189,6 @@ function renderSettingsPage() {
         <div class="settings-row"><span class="settings-label" style="color:var(--danger);">${t('settings.danger')}</span></div>
         <button class="btn btn--danger btn--sm" id="btn-reset-data">${t('settings.delete.btn')}</button>
       </div>
-
-      <div class="settings-card">
-        <div class="settings-title">${t('settings.about.title')}</div>
-        <p style="font-size:0.88rem;color:var(--text-muted);line-height:1.7;"><strong>${t('brand.name')}</strong> — ${t('settings.about.text')}</p>
-      </div>
     </div>
   `;
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carnet-recettes-v25';
+const CACHE_NAME = 'carnet-recettes-v26';
 
 // Fichiers mis en cache pour le mode hors-ligne
 const APP_SHELL = ['./index.html', './css/style.css', './js/data.js', './js/i18n.js', './js/recipes.js', './js/nutrition.js', './js/form.js', './js/importer.js', './js/sites.js', './js/app.js', './manifest.json'];

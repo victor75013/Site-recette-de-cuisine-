@@ -288,6 +288,7 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
     ${display.imageUrl ? `
       <div class="detail-image-wrap" style="height:220px;">
         <img class="detail-image" src="${escapeHtml(display.imageUrl)}" alt="${escapeHtml(display.title)}" onerror="this.style.display='none'" />
+        <div class="detail-image-overlay"></div>
       </div>
     ` : ''}
     <div class="cookbook-container" ${display.imageUrl ? 'style="margin-top:-40px;position:relative;z-index:2;"' : ''}>

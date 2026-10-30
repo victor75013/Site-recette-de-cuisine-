@@ -590,6 +590,11 @@
   justify-content: center;
   transition: transform 0.3s ease;
 }
+.cookbook-ing-icon img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
 .cookbook-ing-card:hover .cookbook-ing-icon { transform: scale(1.1) rotate(3deg); }
 .cookbook-ing-text {
   font-size: 0.84rem;
@@ -655,7 +660,7 @@
   .cookbook-meta-bar { font-size: 0.75rem; padding: 10px; margin: 18px 0 24px; gap: 8px; }
   .cookbook-ingredients-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .cookbook-ing-card { padding: 12px 8px; }
-  .cookbook-ing-icon { font-size: 2.4rem; height: 48px; }
+  .cookbook-ing-icon { font-size: 2.4rem; height: 44px; }
   .cookbook-ing-text { font-size: 0.78rem; }
   .cookbook-steps-box { padding: 20px 16px; margin-bottom: 24px; }
   .cookbook-step-item { font-size: 0.88rem; gap: 10px; }

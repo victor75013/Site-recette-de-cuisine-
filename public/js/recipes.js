@@ -37,6 +37,74 @@ export function getCategoryEmoji(category) {
   return CATEGORY_EMOJI[category] || '🍴';
 }
 
+const INGREDIENT_IMAGE_MAP = [
+  [['poulet', 'chicken'], 'fried-chicken.png'],
+  [['ail', 'garlic'], 'garlic.png'],
+  [['basilic', 'basil'], 'basil.png'],
+  [['cannelle', 'cinnamon'], 'cinnamon.png'],
+  [['citron', 'lemon'], 'lemon.png'],
+  [['coriandre', 'coriander'], 'coriander.png'],
+  [['haricot rouge', 'kidney bean'], 'kidney-bean.png'],
+  [['haricot', 'bean'], 'bean.png'],
+  [['poivron', 'bell pepper'], 'bell-pepper.png'],
+  [['chou', 'cabbage'], 'cabbage.png'],
+  [['carotte', 'carrot'], 'carrots.png'],
+  [['piment', 'chili'], 'chili.png'],
+  [['concombre', 'cucumber'], 'cucumber-slice.png'],
+  [['cumin'], 'cumin.png'],
+  [['poisson', 'fish'], 'fish.png'],
+  [['gingembre', 'ginger'], 'ginger.png'],
+  [['eau', 'water'], 'glass-of-water.png'],
+  [['miel', 'honey'], 'honey.png'],
+  [['menthe', 'mint'], 'mint.png'],
+  [['poireau', 'leek'], 'leek.png'],
+  [['boeuf', 'bœuf', 'veau', 'porc', 'agneau', 'rumsteck', 'rumsteak', 'viande', 'beef', 'veal', 'pork', 'lamb', 'meat'], 'meat.png'],
+  [['lait', 'milk'], 'milk-carton.png'],
+  [['laitue', 'salade verte', 'lettuce'], 'lettuce.png'],
+  [['huile d olive', 'olive oil'], 'olive-oil.png'],
+  [['oignon vert', 'spring onion'], 'spring-onion.png'],
+  [['oignon', 'onion'], 'onion.png'],
+  [['origan', 'oregano'], 'oregano.png'],
+  [['paprika'], 'paprika.png'],
+  [['persil', 'parsley'], 'parsley.png'],
+  [['pomme de terre', 'potato'], 'potatoes.png'],
+  [['romarin', 'rosemary'], 'rosemary.png'],
+  [['saumon', 'salmon'], 'salmon.png'],
+  [['sel', 'salt'], 'salt-container.png'],
+  [['crevette', 'shrimp'], 'shrimp.png'],
+  [['thym', 'thyme'], 'thyme.png'],
+  [['curcuma', 'turmeric'], 'turmeric.png'],
+];
+
+function normalizeIngredientSearchText(text) {
+  return text.toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/['’]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function getIngredientImage(text) {
+  const normalizedText = normalizeIngredientSearchText(text);
+  const ingredientWords = normalizedText.split(/\s+/);
+  if (ingredientWords.includes('gingembre') || ingredientWords.includes('ginger')) {
+    return '/Image/ginger.png';
+  }
+  if (/(^|\s)(poivron|poivrons|bell pepper)($|\s)/.test(normalizedText)) {
+    if (/(^|\s)(rouge|rouges|red)($|\s)/.test(normalizedText)) return '/Image/bell-pepper-red.png';
+    if (/(^|\s)(vert|verte|verts|vertes|green|greens)($|\s)/.test(normalizedText)) return '/Image/bell-pepper-green.png';
+    if (/(^|\s)(jaune|jaunes|yellow|yellows)($|\s)/.test(normalizedText)) return '/Image/bell-pepper-yellow.png';
+  }
+  const image = INGREDIENT_IMAGE_MAP.find(([terms]) =>
+    terms.some(term => {
+      const normalizedTerm = normalizeIngredientSearchText(term);
+      return new RegExp(`(^|\\s)${normalizedTerm.replace(/\s+/g, '\\s+')}($|\\s)`).test(normalizedText);
+    })
+  );
+  return image ? `/Image/${image[1]}` : '';
+}
+
 export function renderRecipeCard(recipe) {
   const display = getCachedTranslation(recipe);
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
@@ -240,9 +308,12 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
       return `<div class="cookbook-ing-card is-header-card">${escapeHtml(text.replace(/^#+\s*/, ''))}</div>`;
     }
     const ingEmoji = getIngredientEmoji(ing);
+    const ingImage = getIngredientImage(text);
     return `
       <div class="cookbook-ing-card">
-        <div class="cookbook-ing-icon">${ingEmoji}</div>
+        <div class="cookbook-ing-icon">
+          ${ingImage ? `<img src="${ingImage}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='${ingEmoji}'">` : ingEmoji}
+        </div>
         <div class="cookbook-ing-text">${escapeHtml(text)}</div>
       </div>
     `;

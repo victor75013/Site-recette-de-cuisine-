@@ -11,6 +11,8 @@ import { renderNutritionCard, calculateNutritionFree, hasValidNutrition, getIngr
 let currentAuthorFilter = '';
 let currentCategoryFilter = '';
 let activeFocusTrapCleanup = null;
+let kitchenWakeLock = null;
+let kitchenVisibilityHandler = null;
 
 const CATEGORY_EMOJI = {
   'Entrées': '🥗',
@@ -409,6 +411,142 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
   `;
 }
 
+function getKitchenSteps(display) {
+  return (display.steps || [])
+    .map(step => typeof step === 'string' ? step.trim() : '')
+    .filter(step => step && !step.startsWith('#') && !/^(astuce|conseil|tip|note)/i.test(step));
+}
+
+function renderKitchenMode(recipe, display) {
+  const steps = getKitchenSteps(display);
+  const ingredients = (display.ingredients || [])
+    .map(ingredient => getIngredientText(ingredient))
+    .filter(text => text && !text.trim().startsWith('#'));
+  const { mainTitle } = splitRecipeTitle(display.title, display.description);
+  const firstStep = steps[0] || display.description || t('kitchen.no.steps');
+
+  return `
+    <div class="kitchen-mode" data-step-count="${steps.length}">
+      <header class="kitchen-header">
+        <button class="btn btn--sm btn--secondary kitchen-back" id="btn-exit-kitchen" type="button"><span aria-hidden="true">←</span> ${t('kitchen.back')}</button>
+        <span class="kitchen-progress" id="kitchen-progress">${steps.length ? `${t('kitchen.step')} 1 ${t('kitchen.of')} ${steps.length}` : t('kitchen.preparation')}</span>
+      </header>
+      <div class="kitchen-title-wrap">
+        <span class="kitchen-label">${t('kitchen.title')}</span>
+        <h1 class="kitchen-title">${escapeHtml(mainTitle)}</h1>
+      </div>
+      <main class="kitchen-content">
+        <section class="kitchen-step-card" aria-live="polite">
+          <div class="kitchen-step-kicker">
+            <span class="kitchen-step-number" id="kitchen-step-number">${steps.length ? '01' : '—'}</span>
+            <span>${t('kitchen.step')}</span>
+          </div>
+          <p class="kitchen-step-text" id="kitchen-step-text">${escapeHtml(firstStep)}</p>
+        </section>
+        <section class="kitchen-ingredients">
+          <div class="kitchen-section-heading">
+            <span class="kitchen-section-index">02</span>
+            <h2>${t('kitchen.ingredients')}</h2>
+          </div>
+          <div class="kitchen-ingredient-list">
+            ${ingredients.length ? ingredients.map((ingredient, index) => `
+              <label class="kitchen-ingredient">
+                <input type="checkbox" data-ingredient-index="${index}">
+                <span>${escapeHtml(ingredient)}</span>
+              </label>
+            `).join('') : `<p class="kitchen-empty">${t('kitchen.no.ingredients')}</p>`}
+          </div>
+        </section>
+      </main>
+      <footer class="kitchen-controls">
+        <button class="btn btn--secondary" id="btn-kitchen-prev" type="button" ${steps.length <= 1 ? 'disabled' : ''}><span aria-hidden="true">←</span> ${t('kitchen.previous')}</button>
+        <button class="btn btn--primary" id="btn-kitchen-next" type="button" ${steps.length <= 1 ? 'disabled' : ''}>${t('kitchen.next')} <span aria-hidden="true">→</span></button>
+      </footer>
+      <p class="kitchen-wake-status kitchen-wake-status--requesting" id="kitchen-wake-status" role="status"><span class="kitchen-status-dot" aria-hidden="true"></span>${t('kitchen.wake.requesting')}</p>
+    </div>
+  `;
+}
+
+async function releaseKitchenWakeLock() {
+  if (kitchenWakeLock) {
+    await kitchenWakeLock.release();
+    kitchenWakeLock = null;
+  }
+}
+
+async function requestKitchenWakeLock() {
+  const setWakeStatus = (message, state) => {
+    const status = document.getElementById('kitchen-wake-status');
+    if (!status) return;
+    status.className = `kitchen-wake-status kitchen-wake-status--${state}`;
+    status.lastChild.textContent = message;
+  };
+  if (!('wakeLock' in navigator)) {
+    setWakeStatus(t('kitchen.wake.unsupported'), 'unavailable');
+    return;
+  }
+  try {
+    kitchenWakeLock = await navigator.wakeLock.request('screen');
+    setWakeStatus(t('kitchen.wake.active'), 'active');
+    kitchenWakeLock.addEventListener('release', () => {
+      kitchenWakeLock = null;
+    });
+  } catch (error) {
+    setWakeStatus(t('kitchen.wake.denied'), 'denied');
+  }
+}
+
+export async function openKitchenMode(recipe, display) {
+  await releaseKitchenWakeLock();
+  if (kitchenVisibilityHandler) {
+    document.removeEventListener('visibilitychange', kitchenVisibilityHandler);
+  }
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = renderKitchenMode(recipe, display);
+  const steps = getKitchenSteps(display);
+  let currentStep = 0;
+  const renderStep = () => {
+    const text = document.getElementById('kitchen-step-text');
+     const number = document.getElementById('kitchen-step-number');
+     const progress = document.getElementById('kitchen-progress');
+     if (text) text.textContent = steps[currentStep] || display.description || t('kitchen.no.steps');
+     if (number) number.textContent = steps.length ? String(currentStep + 1).padStart(2, '0') : '—';
+    if (progress) progress.textContent = steps.length
+      ? `${t('kitchen.step')} ${currentStep + 1} ${t('kitchen.of')} ${steps.length}`
+      : t('kitchen.preparation');
+    document.getElementById('btn-kitchen-prev').disabled = currentStep === 0;
+    document.getElementById('btn-kitchen-next').disabled = currentStep >= steps.length - 1;
+  };
+
+  document.getElementById('btn-kitchen-prev')?.addEventListener('click', () => {
+    if (currentStep > 0) {
+      currentStep -= 1;
+      renderStep();
+    }
+  });
+  document.getElementById('btn-kitchen-next')?.addEventListener('click', () => {
+    if (currentStep < steps.length - 1) {
+      currentStep += 1;
+      renderStep();
+    }
+  });
+  document.getElementById('btn-exit-kitchen')?.addEventListener('click', async () => {
+    await releaseKitchenWakeLock();
+    document.removeEventListener('visibilitychange', kitchenVisibilityHandler);
+    kitchenVisibilityHandler = null;
+    openRecipeDetail(recipe.id);
+  });
+  renderStep();
+  await requestKitchenWakeLock();
+  kitchenVisibilityHandler = async () => {
+    if (document.visibilityState === 'visible' && !kitchenWakeLock) {
+      await requestKitchenWakeLock();
+    }
+  };
+  document.addEventListener('visibilitychange', kitchenVisibilityHandler);
+}
+
 // ─── RENDU DU MODE CLASSIQUE (Point 7) ───
 export function renderClassicView(recipe, display, headerActionsHtml) {
   const emoji = getCategoryEmoji(recipe.category);
@@ -519,6 +657,9 @@ export async function openRecipeDetail(id) {
 
   const headerActionsHtml = `
     <div class="modal-header-actions" style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn--sm btn--primary" id="btn-kitchen-mode" title="${t('kitchen.open')}">
+        ${t('kitchen.open')}
+      </button>
       <button class="btn btn--sm btn--secondary" id="btn-toggle-view" title="Changer le style d'affichage">
         ${viewMode === 'cookbook' ? t('detail.view.classic') : t('detail.view.cookbook')}
       </button>
@@ -543,6 +684,10 @@ export async function openRecipeDetail(id) {
     const newMode = viewMode === 'cookbook' ? 'classic' : 'cookbook';
     localStorage.setItem('recipe_view_mode', newMode);
     openRecipeDetail(id);
+  });
+
+  document.getElementById('btn-kitchen-mode')?.addEventListener('click', () => {
+    openKitchenMode(recipe, displayRecipe);
   });
 
   // Chargement nutrition asynchrone

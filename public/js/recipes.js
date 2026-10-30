@@ -694,9 +694,6 @@ export async function openRecipeDetail(id) {
 
   const headerActionsHtml = `
     <div class="modal-header-actions" style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-      <button class="btn btn--sm btn--primary" id="btn-kitchen-mode" title="${t('kitchen.open')}">
-        ${t('kitchen.open')}
-      </button>
       <button class="btn btn--sm btn--secondary" id="btn-toggle-view" title="Changer le style d'affichage">
         ${viewMode === 'cookbook' ? t('detail.view.classic') : t('detail.view.cookbook')}
       </button>
@@ -721,10 +718,6 @@ export async function openRecipeDetail(id) {
     const newMode = viewMode === 'cookbook' ? 'classic' : 'cookbook';
     localStorage.setItem('recipe_view_mode', newMode);
     openRecipeDetail(id);
-  });
-
-  document.getElementById('btn-kitchen-mode')?.addEventListener('click', () => {
-    openKitchenMode(recipe, displayRecipe);
   });
 
   let selectedRating = Number(recipe.rating) || 0;

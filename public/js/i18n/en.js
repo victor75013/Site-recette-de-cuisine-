@@ -35,8 +35,8 @@ export default {
   'home.noresult.text': 'Try different terms.',
 
   // Recipe detail
-  'detail.edit':        '✏️ Edit',
-  'detail.delete':      '🗑️ Delete',
+  'detail.edit':        'Edit',
+  'detail.delete':      'Delete',
   'detail.delete.confirm': 'Are you sure you want to delete',
   'detail.view.classic':'🎨 Classic View',
   'detail.view.cookbook':'📖 Cookbook Mode',

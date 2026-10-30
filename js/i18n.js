@@ -36,8 +36,8 @@ const TRANSLATIONS = {
     'home.noresult.text': "Essayez d'autres termes.",
 
     // Recipe detail
-    'detail.edit':        '✏️ Modifier',
-    'detail.delete':      '🗑️ Supprimer',
+    'detail.edit':        'Modifier',
+    'detail.delete':      'Supprimer',
     'detail.delete.confirm': 'Voulez-vous vraiment supprimer',
     'detail.view.classic':'🎨 Vue Classique',
     'detail.view.cookbook':'📖 Mode Livre',
@@ -224,8 +224,8 @@ const TRANSLATIONS = {
     'home.noresult.text': 'Try different terms.',
 
     // Recipe detail
-    'detail.edit':        '✏️ Edit',
-    'detail.delete':      '🗑️ Delete',
+    'detail.edit':        'Edit',
+    'detail.delete':      'Delete',
     'detail.delete.confirm': 'Are you sure you want to delete',
     'detail.view.classic':'🎨 Classic View',
     'detail.view.cookbook':'📖 Cookbook Mode',

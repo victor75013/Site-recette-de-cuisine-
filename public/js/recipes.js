@@ -349,9 +349,9 @@ export async function renderRecipeShareCanvases(recipe, display, format = 'story
     .filter(step => step && !step.startsWith('#'));
   const { mainTitle } = splitRecipeTitle(display.title, display.description);
   const meta = [
-    display.prepTime ? `⏱ ${t('detail.prep')} ${formatTime(display.prepTime)}` : '',
-    display.cookTime ? `🔥 ${t('detail.cook')} ${formatTime(display.cookTime)}` : '',
-    display.servings ? `🍽 ${display.servings} ${display.servingsUnit || t('unit.people')}` : '',
+    display.prepTime ? `${t('detail.prep')} ${formatTime(display.prepTime)}` : '',
+    display.cookTime ? `${t('detail.cook')} ${formatTime(display.cookTime)}` : '',
+    display.servings ? `${display.servings} ${display.servingsUnit || t('unit.people')}` : '',
   ].filter(Boolean).join('   •   ');
   let stepIndex = 0;
   const canvases = [];
@@ -499,7 +499,7 @@ export async function renderRecipeShareCanvases(recipe, display, format = 'story
     ctx.fillRect(margin, footerTop, width - margin * 2, 2);
     ctx.fillStyle = '#686157';
     ctx.font = '500 22px Arial, sans-serif';
-    ctx.fillText(display.category ? `${getCategoryEmoji(display.category)} ${display.category}` : 'Une recette à partager', margin, height - 38);
+    ctx.fillText(display.category || 'Une recette à partager', margin, height - 38);
     canvases.push(canvas);
     if (stepIndex >= steps.length) break;
   }
@@ -920,6 +920,10 @@ export function renderClassicView(recipe, display, headerActionsHtml) {
     }
     return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(text)}</li>`;
   }).join('');
+  const ingredientCount = (display.ingredients || []).filter(ingredient => {
+    const text = getIngredientText(ingredient);
+    return text && !text.trim().startsWith('#');
+  }).length;
 
   let stepNum = 1;
   const stepsHtml = (display.steps || []).map(step => {
@@ -927,7 +931,7 @@ export function renderClassicView(recipe, display, headerActionsHtml) {
     if (isHeader) {
       return `<li class="step-item is-header">${escapeHtml(step.replace(/^#+\s*/, ''))}</li>`;
     }
-    return `<li class="step-item"><span class="step-number">${stepNum++}</span><span class="step-text">${escapeHtml(step)}</span></li>`;
+    return `<li class="step-item"><span class="step-number">${stepNum++}.</span><span class="step-text">${escapeHtml(step)}</span></li>`;
   }).join('');
 
   const badges = [
@@ -951,14 +955,14 @@ export function renderClassicView(recipe, display, headerActionsHtml) {
 
       ${ingredientsHtml ? `
         <div class="detail-section">
-          <h3 class="detail-section-title">${t('detail.ingredients')}</h3>
+          <h3 class="detail-section-title">${t('detail.ingredients').toUpperCase()} (${ingredientCount})</h3>
           <ul class="ingredients-list">${ingredientsHtml}</ul>
         </div>
       ` : ''}
 
       ${stepsHtml ? `
         <div class="detail-section">
-          <h3 class="detail-section-title">${t('detail.steps')}</h3>
+          <h3 class="detail-section-title">${t('detail.steps').toUpperCase()}</h3>
           <ol class="steps-list">${stepsHtml}</ol>
         </div>
       ` : ''}

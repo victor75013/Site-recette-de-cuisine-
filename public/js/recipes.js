@@ -249,7 +249,17 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
   }).join('');
 
   let stepNum = 1;
-  const stepsHtml = (display.steps || []).map(step => {
+  let tipText = '';
+  const stepsList = [];
+  (display.steps || []).forEach(step => {
+    const text = typeof step === 'string' ? step : '';
+    if (/^(astuce|conseil|tip|note)/i.test(text.trim())) {
+      tipText = text;
+    } else {
+      stepsList.push(step);
+    }
+  });
+  const stepsHtml = stepsList.map(step => {
     const isHeader = typeof step === 'string' && step.trim().startsWith('#');
     if (isHeader) {
       return `<li class="cookbook-step-header">${escapeHtml(step.replace(/^#+\s*/, ''))}</li>`;
@@ -268,6 +278,10 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
     display.prepTime ? `<span class="cookbook-meta-item">${t('detail.prep')} <strong>${formatTime(display.prepTime)}</strong></span>` : '',
     display.cookTime ? `<span class="cookbook-meta-item">${t('detail.cook')} <strong>${formatTime(display.cookTime)}</strong></span>` : '',
   ].filter(Boolean).join(' &nbsp;•&nbsp; ');
+  const ingCount = (display.ingredients || []).filter(ingredient => {
+    const text = getIngredientText(ingredient);
+    return text && !text.trim().startsWith('#');
+  }).length;
 
   return `
     ${headerActionsHtml}
@@ -276,7 +290,7 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
         <img class="detail-image" src="${escapeHtml(display.imageUrl)}" alt="${escapeHtml(display.title)}" onerror="this.style.display='none'" />
       </div>
     ` : ''}
-    <div class="cookbook-container" ${display.imageUrl ? 'style="margin-top:-30px;position:relative;z-index:2;"' : ''}>
+    <div class="cookbook-container" ${display.imageUrl ? 'style="margin-top:-40px;position:relative;z-index:2;"' : ''}>
       <div class="cookbook-header">
         <h2 class="cookbook-title" id="modal-title">${escapeHtml(mainTitle)}</h2>
         ${subtitle ? `<div class="cookbook-subtitle">${escapeHtml(subtitle)}</div>` : ''}
@@ -284,15 +298,30 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
       ${metaItems ? `<div class="cookbook-meta-bar">${metaItems}</div>` : ''}
 
       ${ingredientsGridHtml ? `
-        <div class="cookbook-section-title">${t('detail.ingredients')}</div>
+        <div class="cookbook-section-title">${t('detail.ingredients')} (${ingCount})</div>
         <div class="cookbook-ingredients-grid">${ingredientsGridHtml}</div>
       ` : ''}
 
-      <div id="nutrition-container"></div>
+      <div id="nutrition-container">
+        ${hasValidNutrition(recipe) ? renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0) : (recipe.ingredients?.length ? `<div class="nutrition-loading"><span class="spinner"></span> <span>${t('detail.nutrition.analysis')}</span></div>` : '')}
+      </div>
 
       ${stepsHtml ? `
         <div class="cookbook-section-title">${t('detail.steps')}</div>
-        <ol class="cookbook-steps-list">${stepsHtml}</ol>
+        <div class="cookbook-steps-box">
+          <ol class="cookbook-steps-list">${stepsHtml}</ol>
+          ${tipText ? `
+            <div class="cookbook-tip">
+              💡 <strong>${t('detail.tip')}</strong> ${escapeHtml(tipText.replace(/^(astuce|conseil|tip|note)\s*:\s*/i, ''))}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+
+      ${display.sourceUrl ? `
+        <div class="detail-source" style="margin-bottom:24px;">
+          ${t('detail.source')} <a href="${escapeHtml(display.sourceUrl)}" target="_blank" rel="noopener">${escapeHtml(display.sourceUrl)}</a>
+        </div>
       ` : ''}
 
       <div class="detail-actions">

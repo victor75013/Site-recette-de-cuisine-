@@ -537,3 +537,99 @@
   .cookbook-steps-box { padding: 20px 16px; margin-bottom: 24px; }
   .cookbook-step-item { font-size: 0.88rem; gap: 10px; }
 }
+
+/* Align the module build with the legacy HTML cookbook view. */
+.modal {
+  background: var(--bg);
+  border-radius: 0;
+  max-width: 760px;
+}
+.modal-header-actions {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.view-toggle-btn {
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.cookbook-steps-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  margin-bottom: 32px;
+  background: var(--surface);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+.cookbook-steps-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.cookbook-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+.cookbook-step-num {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--accent);
+  min-width: 24px;
+  flex-shrink: 0;
+}
+.cookbook-step-text { flex: 1; font-weight: 500; }
+.cookbook-step-header {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius-sm);
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.cookbook-step-header:first-child { margin-top: 0; }
+.cookbook-tip {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.cookbook-tip strong { color: var(--accent); font-style: normal; }
+
+@media (max-width: 768px) {
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal { max-height: 95vh; border-radius: 0; max-width: 100%; }
+  .modal-header-actions { top: 14px; left: 14px; }
+  .view-toggle-btn { padding: 6px 12px; font-size: 0.72rem; }
+  .cookbook-steps-box { padding: 20px 16px; margin-bottom: 24px; }
+  .cookbook-step-item { font-size: 0.88rem; gap: 10px; }
+}

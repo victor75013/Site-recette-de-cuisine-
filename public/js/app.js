@@ -18,7 +18,6 @@ function initTheme() {
   const saved = localStorage.getItem(STORAGE_KEYS.THEME) || 'light';
   applyTheme(saved);
   document.getElementById('theme-toggle-btn')?.addEventListener('click', toggleTheme);
-  document.getElementById('bnav-theme')?.addEventListener('click', toggleTheme);
 }
 
 function toggleTheme() {
@@ -36,8 +35,6 @@ function updateThemeUI(theme) {
   const icon = theme === 'dark' ? '☀️' : '🌙';
   const btn = document.getElementById('theme-toggle-btn');
   if (btn) btn.textContent = icon;
-  const bnavIcon = document.getElementById('bnav-theme-icon');
-  if (bnavIcon) bnavIcon.textContent = icon;
 }
 
 /* ====== TOAST NOTIFICATIONS ====== */

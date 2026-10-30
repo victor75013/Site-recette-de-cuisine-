@@ -6,6 +6,7 @@ import { getLang, CATEGORY_FR_TO_EN } from './index.js';
 import { STORAGE_KEYS, API_BASE_URL } from '../config.js';
 import { callGemini } from '../services/gemini.js';
 import { getSettings } from '../data.js';
+import { getIngredientText } from '../nutrition.js';
 
 export function getTranslationCache() {
   try {
@@ -49,7 +50,7 @@ export async function translateRecipeViaGoogle(recipe, targetLang = 'en') {
   const items = [
     recipe.title || '',
     recipe.description || '',
-    ...ingredients,
+    ...ingredients.map(getIngredientText),
     '___STEPS_DELIM___',
     ...steps,
   ];

@@ -530,7 +530,7 @@ async function translateRecipeViaGoogle(recipe, targetLang = 'en') {
   const items = [
     recipe.title || '',
     recipe.description || '',
-    ...ingredients,
+    ...ingredients.map(getIngredientText),
     '___STEPS_DELIM___',
     ...steps,
   ];

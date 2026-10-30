@@ -4,6 +4,7 @@
 
 import { STORAGE_KEYS } from './config.js';
 import { generateId, isValidRecipeId } from './utils.js';
+import { normalizeRecipeIngredients } from './nutrition.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAvuPpHvqpOxSU1RrQlQxamqMoqVVnk3Bk",
@@ -113,6 +114,7 @@ export async function getRecipeById(id) {
 export async function saveRecipe(recipe) {
   if (!currentUser) throw new Error('Vous devez être connecté pour enregistrer une recette.');
 
+  recipe = normalizeRecipeIngredients(recipe);
   const now = new Date().toISOString();
   let savedId = recipe.id;
 

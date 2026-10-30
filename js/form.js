@@ -189,6 +189,7 @@ async function renderAddEditForm(editId = null, prefill = null) {
 }
 
 function renderIngredientRow(value = '', index) {
+  value = getIngredientText(value);
   const trimmedValue = value.trim();
   const isHeader = trimmedValue.startsWith('#');
   const displayValue = isHeader ? trimmedValue.replace(/^#+\s*/, '').trim() : value;

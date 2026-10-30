@@ -6,6 +6,7 @@ import { getAllRecipes, getRecipeById, saveRecipe, currentUser } from './data.js
 import { t, getLang } from './i18n/index.js';
 import { escapeHtml } from './utils.js';
 import { findRecipeImage } from './importer.js';
+import { getIngredientText } from './nutrition.js';
 
 export const CATEGORIES_FR = [
   'Entrées', 'Plats principaux', 'Desserts', 'Soupes',
@@ -183,7 +184,8 @@ export async function renderAddEditForm(editId = null, prefill = null) {
 }
 
 function renderIngredientRow(value = '', index = 0) {
-  const isHeader = typeof value === 'string' && value.trim().startsWith('#');
+  value = getIngredientText(value);
+  const isHeader = value.trim().startsWith('#');
   const cleanVal = isHeader ? value.trim().replace(/^#+\s*/, '') : value;
 
   return `

@@ -108,11 +108,11 @@ function cleanFoodName(name) {
 /**
  * Extrait la quantité en grammes et le nom de l'aliment depuis une chaîne d'ingrédient.
  * @param {string} ingStr - ex: "600g de crevettes crues décortiquées"
- * @returns {{ grams: number, name: string }}
+ * @returns {{ qty: number, unit: string, name: string, grams: number }}
  */
-function parseIngredient(ingStr) {
-  const s = ingStr.trim();
-  if (!s) return { grams: 0, name: '' };
+export function parseIngredient(ingStr) {
+  const s = typeof ingStr === 'string' ? ingStr.trim() : '';
+  if (!s) return { qty: 0, unit: '', grams: 0, name: '' };
 
   // Pattern : [nombre] [unité] [de/d'/du/des/la/le/un/une] [nom]
   const re = /^([\d.,]+)\s*([a-zA-Zà-ÿ]+)?\s*(?:d['’e]\s*|du\s*|des\s*|de\s*|la\s*|le\s*|les\s*|un\s*|une\s*)?(.*)/i;
@@ -124,16 +124,36 @@ function parseIngredient(ingStr) {
     const namePart = (m[3] || '').trim() || unitRaw;
 
     if (UNIT_TO_GRAMS[unitRaw] !== undefined) {
-      return { grams: qty * UNIT_TO_GRAMS[unitRaw], name: cleanFoodName(namePart || unitRaw) };
+      return { qty, unit: unitRaw, grams: qty * UNIT_TO_GRAMS[unitRaw], name: cleanFoodName(namePart || unitRaw) };
     } else {
       const foodWord = unitRaw || namePart.split(' ')[0].toLowerCase();
       const pieceWeight = PIECE_WEIGHTS[foodWord] || 100;
-      const name = cleanFoodName(unitRaw ? (unitRaw + ' ' + namePart).trim() : namePart);
-      return { grams: qty * pieceWeight, name };
+      const name = cleanFoodName(m[3]?.trim() ? (unitRaw + ' ' + namePart).trim() : namePart);
+      return { qty, unit: '', grams: qty * pieceWeight, name };
     }
   }
 
-  return { grams: 5, name: cleanFoodName(s) };
+  return { qty: 1, unit: '', grams: 5, name: cleanFoodName(s) };
+}
+
+export function getIngredientText(ingredient) {
+  return typeof ingredient === 'string'
+    ? ingredient
+    : ingredient?.raw || ingredient?.text || ingredient?.original || '';
+}
+
+export function normalizeIngredient(ingredient) {
+  if (typeof ingredient !== 'string') return ingredient;
+  if (ingredient.trim().startsWith('#')) return ingredient;
+  return { raw: ingredient, ...parseIngredient(ingredient) };
+}
+
+export function normalizeRecipeIngredients(recipe) {
+  if (!recipe || !Array.isArray(recipe.ingredients)) return recipe;
+  return {
+    ...recipe,
+    ingredients: recipe.ingredients.map(normalizeIngredient),
+  };
 }
 
 // ---------- OPEN FOOD FACTS (Moteur Optimisé) ----------
@@ -223,7 +243,10 @@ async function searchOpenFoodFacts(foodName) {
  * @returns {Promise<{calories, proteins, lipids, carbs, source, foundCount, totalCount}|null>}
  */
 export async function calculateNutritionFree(ingredients) {
-  const realIngredients = (ingredients || []).filter(i => typeof i === 'string' && !i.trim().startsWith('#'));
+  const realIngredients = (ingredients || []).filter(i => {
+    const text = getIngredientText(i);
+    return text && !text.trim().startsWith('#');
+  });
   if (realIngredients.length === 0) return null;
 
   let totalCalories = 0, totalProteins = 0, totalLipids = 0, totalCarbs = 0;
@@ -231,9 +254,10 @@ export async function calculateNutritionFree(ingredients) {
 
   // Lancement des requêtes en parallèle pour tous les ingrédients
   const results = await Promise.all(
-    realIngredients.map(async (ingStr) => {
+    realIngredients.map(async (ingredient) => {
       try {
-        const { grams, name } = parseIngredient(ingStr);
+        const parsed = typeof ingredient === 'string' ? parseIngredient(ingredient) : ingredient;
+        const { grams, name } = parsed;
         if (!name || name.length < 2) return null;
 
         const nutrients = await searchOpenFoodFacts(name);

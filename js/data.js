@@ -172,6 +172,9 @@ async function getRecipeById(id) {
 async function saveRecipe(recipe) {
   if (!currentUser) throw new Error("Vous devez être connecté pour enregistrer une recette.");
   
+  if (typeof normalizeRecipeIngredients === 'function') {
+    recipe = normalizeRecipeIngredients(recipe);
+  }
   const now = new Date().toISOString();
   
   if (!recipe.id) {

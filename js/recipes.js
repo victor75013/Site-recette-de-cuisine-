@@ -70,7 +70,10 @@ function renderRecipeCard(recipe) {
     ? `<img class="card-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(display.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-image-placeholder" style="display:none">${emoji}</div>`
     : `<div class="card-image-placeholder">${emoji}</div>`;
 
-  const ingCount = recipe.ingredients?.filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#')).length || 0;
+  const ingCount = recipe.ingredients?.filter(ing => {
+    const text = getIngredientText(ing);
+    return text && !text.trim().startsWith('#');
+  }).length || 0;
 
   const metaItems = [
     timeLabel ? `<span class="meta-item">⏱️ ${timeLabel}</span>` : '',
@@ -209,11 +212,11 @@ async function updateRecipeGrid() {
         r.description?.toLowerCase().includes(searchQuery) ||
         r.category?.toLowerCase().includes(searchQuery) ||
         r.author?.toLowerCase().includes(searchQuery) ||
-        r.ingredients?.some(i => i.toLowerCase().includes(searchQuery)) ||
+        r.ingredients?.some(i => getIngredientText(i).toLowerCase().includes(searchQuery)) ||
         trans.title?.toLowerCase().includes(searchQuery) ||
         trans.description?.toLowerCase().includes(searchQuery) ||
         trans.category?.toLowerCase().includes(searchQuery) ||
-        trans.ingredients?.some(i => i.toLowerCase().includes(searchQuery))
+        trans.ingredients?.some(i => getIngredientText(i).toLowerCase().includes(searchQuery))
       );
     });
   }
@@ -358,16 +361,17 @@ async function openRecipeDetail(id) {
     
     // Ingrédients sous forme de grille visuelle
     const ingredientsGridHtml = (r.ingredients || []).map(ing => {
-      const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+      const text = getIngredientText(ing);
+      const isHeader = text.trim().startsWith('#');
       if (isHeader) {
-        const title = ing.trim().replace(/^#+\s*/, '').trim();
+        const title = text.trim().replace(/^#+\s*/, '').trim();
         return `<div class="cookbook-ing-card is-header-card">${escapeHtml(title)}</div>`;
       }
       const ingEmoji = getIngredientEmoji(ing);
       return `
         <div class="cookbook-ing-card">
           <div class="cookbook-ing-icon">${ingEmoji}</div>
-          <div class="cookbook-ing-text">${escapeHtml(ing)}</div>
+          <div class="cookbook-ing-text">${escapeHtml(text)}</div>
         </div>
       `;
     }).join('');
@@ -413,7 +417,10 @@ async function openRecipeDetail(id) {
       </div>
     ` : '';
 
-    const ingCount = (r.ingredients || []).filter(i => !i.trim().startsWith('#')).length;
+    const ingCount = (r.ingredients || []).filter(i => {
+      const text = getIngredientText(i);
+      return text && !text.trim().startsWith('#');
+    }).length;
 
     content.innerHTML = `
       ${headerActionsHtml}
@@ -470,14 +477,18 @@ async function openRecipeDetail(id) {
       ? `<div class="detail-image-wrap"><img class="detail-image" src="${escapeHtml(r.imageUrl)}" alt="${escapeHtml(r.title)}" onerror="this.parentElement.innerHTML='<div class=\\'detail-image-placeholder\\'>${emoji}</div>'" /><div class="detail-image-overlay"></div></div>`
       : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
 
-    const actualIngredients = (r.ingredients || []).filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#'));
+    const actualIngredients = (r.ingredients || []).filter(ing => {
+      const text = getIngredientText(ing);
+      return text && !text.trim().startsWith('#');
+    });
     const ingredientsHtml = (r.ingredients || []).map(ing => {
-      const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+      const text = getIngredientText(ing);
+      const isHeader = text.trim().startsWith('#');
       if (isHeader) {
-        const title = ing.trim().replace(/^#+\s*/, '').trim();
+        const title = text.trim().replace(/^#+\s*/, '').trim();
         return `<li class="ingredient-item is-header">${escapeHtml(title)}</li>`;
       }
-      return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
+      return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(text)}</li>`;
     }).join('');
 
     let stepNumClassic = 1;
@@ -561,7 +572,10 @@ async function openRecipeDetail(id) {
     if (hasValidNutrition(recipe)) {
       nutritionContainer.innerHTML = renderNutritionCard(recipe.nutrition, recipe.servingsUnit === 'personnes' || recipe.servingsUnit === 'portions' ? recipe.servings : 0);
     } else if (!nutritionContainer.innerHTML.includes('spinner') || nutritionContainer.innerHTML === '') {
-      const realIngredients = (recipe.ingredients || []).filter(i => typeof i === 'string' && !i.trim().startsWith('#'));
+      const realIngredients = (recipe.ingredients || []).filter(i => {
+        const text = getIngredientText(i);
+        return text && !text.trim().startsWith('#');
+      });
 
       if (realIngredients.length === 0) {
         nutritionContainer.innerHTML = '';

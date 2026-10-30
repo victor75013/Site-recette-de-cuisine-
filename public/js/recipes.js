@@ -6,7 +6,7 @@ import { getAllRecipes, getRecipeById, deleteRecipe, currentUser, db } from './d
 import { t, getLang, translateCategory, getIngredientEmoji } from './i18n/index.js';
 import { getCachedTranslation, translateRecipeForDisplay, clearRecipeTranslation } from './i18n/translate-recipe.js';
 import { escapeHtml, formatTime, formatServings, isServingUnit, trapFocus } from './utils.js';
-import { renderNutritionCard, calculateNutritionFree, hasValidNutrition } from './nutrition.js';
+import { renderNutritionCard, calculateNutritionFree, hasValidNutrition, getIngredientText } from './nutrition.js';
 
 let currentAuthorFilter = '';
 let currentCategoryFilter = '';
@@ -47,7 +47,10 @@ export function renderRecipeCard(recipe) {
     ? `<img class="card-image" src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(display.title)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-image-placeholder u-hidden">${emoji}</div>`
     : `<div class="card-image-placeholder">${emoji}</div>`;
 
-  const ingCount = recipe.ingredients?.filter(ing => typeof ing === 'string' && !ing.trim().startsWith('#')).length || 0;
+  const ingCount = recipe.ingredients?.filter(ing => {
+    const text = getIngredientText(ing);
+    return text && !text.trim().startsWith('#');
+  }).length || 0;
 
   const metaItems = [
     timeLabel ? `<span class="meta-item">⏱️ ${timeLabel}</span>` : '',
@@ -185,7 +188,7 @@ export async function updateRecipeGrid() {
     const display = getCachedTranslation(r);
     const inTitle = (display.title || '').toLowerCase().includes(searchQuery);
     const inDesc = (display.description || '').toLowerCase().includes(searchQuery);
-    const inIngr = (r.ingredients || []).some(i => (typeof i === 'string' ? i : '').toLowerCase().includes(searchQuery));
+    const inIngr = (r.ingredients || []).some(i => getIngredientText(i).toLowerCase().includes(searchQuery));
     return inTitle || inDesc || inIngr;
   });
 
@@ -231,15 +234,16 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
   const { mainTitle, subtitle } = splitRecipeTitle(display.title, display.description);
 
   const ingredientsGridHtml = (display.ingredients || []).map(ing => {
-    const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+    const text = getIngredientText(ing);
+    const isHeader = text.trim().startsWith('#');
     if (isHeader) {
-      return `<div class="cookbook-ing-card is-header-card">${escapeHtml(ing.replace(/^#+\s*/, ''))}</div>`;
+      return `<div class="cookbook-ing-card is-header-card">${escapeHtml(text.replace(/^#+\s*/, ''))}</div>`;
     }
     const ingEmoji = getIngredientEmoji(ing);
     return `
       <div class="cookbook-ing-card">
         <div class="cookbook-ing-icon">${ingEmoji}</div>
-        <div class="cookbook-ing-text">${escapeHtml(ing)}</div>
+        <div class="cookbook-ing-text">${escapeHtml(text)}</div>
       </div>
     `;
   }).join('');
@@ -309,11 +313,12 @@ export function renderClassicView(recipe, display, headerActionsHtml) {
     : `<div class="detail-image-wrap"><div class="detail-image-placeholder">${emoji}</div></div>`;
 
   const ingredientsHtml = (display.ingredients || []).map(ing => {
-    const isHeader = typeof ing === 'string' && ing.trim().startsWith('#');
+    const text = getIngredientText(ing);
+    const isHeader = text.trim().startsWith('#');
     if (isHeader) {
-      return `<li class="ingredient-item is-header">${escapeHtml(ing.replace(/^#+\s*/, ''))}</li>`;
+      return `<li class="ingredient-item is-header">${escapeHtml(text.replace(/^#+\s*/, ''))}</li>`;
     }
-    return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(ing)}</li>`;
+    return `<li class="ingredient-item"><span class="ingredient-dot"></span>${escapeHtml(text)}</li>`;
   }).join('');
 
   let stepNum = 1;

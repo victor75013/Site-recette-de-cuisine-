@@ -304,6 +304,326 @@ export function splitRecipeTitle(title, description = '') {
   return { mainTitle: mainTitle.trim(), subtitle: subtitle.trim() };
 }
 
+const SHARE_CARD_FORMATS = {
+  story: { width: 1080, height: 1920 },
+  square: { width: 1080, height: 1080 },
+};
+
+function canvasTextLines(ctx, text, maxWidth) {
+  const words = String(text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word => {
+    const candidate = line ? `${line} ${word}` : word;
+    if (line && ctx.measureText(candidate).width > maxWidth) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+async function loadShareCardImage(url) {
+  if (!url) return null;
+  return new Promise(resolve => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
+}
+
+export async function renderRecipeShareCanvases(recipe, display, format = 'story') {
+  const dimensions = SHARE_CARD_FORMATS[format] || SHARE_CARD_FORMATS.story;
+  const { width, height } = dimensions;
+  const margin = format === 'square' ? 84 : 92;
+  const imageHeight = format === 'square' ? 300 : 540;
+  const image = await loadShareCardImage(display.imageUrl || recipe.imageUrl);
+  const ingredients = (display.ingredients || []).map(getIngredientText)
+    .filter(text => text && !text.trim().startsWith('#'));
+  const steps = (display.steps || []).map(step => typeof step === 'string' ? step.trim() : '')
+    .filter(step => step && !step.startsWith('#'));
+  const { mainTitle } = splitRecipeTitle(display.title, display.description);
+  const meta = [
+    display.prepTime ? `⏱ ${t('detail.prep')} ${formatTime(display.prepTime)}` : '',
+    display.cookTime ? `🔥 ${t('detail.cook')} ${formatTime(display.cookTime)}` : '',
+    display.servings ? `🍽 ${display.servings} ${display.servingsUnit || t('unit.people')}` : '',
+  ].filter(Boolean).join('   •   ');
+  let stepIndex = 0;
+  const canvases = [];
+  const footerTop = height - 122;
+  const sectionBottom = footerTop - 34;
+
+  const drawPage = (pageIndex) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#f6f3eb';
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = '#9c7753';
+    ctx.fillRect(0, 0, width, 18);
+    let contentTop = 18;
+
+    if (pageIndex === 0) {
+      if (image) {
+        const ratio = Math.max(width / image.width, imageHeight / image.height);
+        const drawWidth = image.width * ratio;
+        const drawHeight = image.height * ratio;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 18, width, imageHeight);
+        ctx.clip();
+        ctx.drawImage(image, (width - drawWidth) / 2, 18 + (imageHeight - drawHeight) / 2, drawWidth, drawHeight);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(24, 19, 15, 0.18)';
+        ctx.fillRect(0, 18, width, imageHeight);
+      } else {
+        ctx.fillStyle = '#e9dfd0';
+        ctx.fillRect(0, 18, width, imageHeight);
+        ctx.strokeStyle = 'rgba(156, 119, 83, 0.18)';
+        ctx.lineWidth = 3;
+        for (let x = -imageHeight; x < width; x += 96) {
+          ctx.beginPath();
+          ctx.moveTo(x, 18);
+          ctx.lineTo(x + imageHeight, 18 + imageHeight);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#9c7753';
+        ctx.font = '148px serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(getCategoryEmoji(display.category), width / 2, imageHeight / 2 + 55);
+      }
+      contentTop = imageHeight + 18;
+      ctx.fillStyle = '#f6f3eb';
+      ctx.fillRect(0, contentTop, width, height - contentTop);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#9c7753';
+      ctx.font = '700 26px Arial, sans-serif';
+      ctx.fillText('CARNET DE RECETTES', margin, contentTop + 72);
+      ctx.fillStyle = '#1c1917';
+      const titleFontSize = format === 'square' ? 68 : 82;
+      const titleLineHeight = format === 'square' ? 70 : 82;
+      ctx.font = `400 ${titleFontSize}px "League Gothic", Impact, sans-serif`;
+      const titleLines = canvasTextLines(ctx, mainTitle, width - margin * 2);
+      titleLines.slice(0, format === 'square' ? 2 : 3)
+        .forEach((line, index) => ctx.fillText(line, margin, contentTop + 165 + index * titleLineHeight));
+      const metaY = contentTop + 165 + Math.min(titleLines.length, format === 'square' ? 2 : 3) * titleLineHeight + 38;
+      if (meta) {
+        ctx.fillStyle = '#686157';
+        ctx.font = '600 27px Arial, sans-serif';
+        ctx.fillText(meta.slice(0, 62), margin, metaY);
+      }
+
+      const ingredientsY = metaY + 92;
+      ctx.fillStyle = '#9c7753';
+      ctx.font = '700 24px Arial, sans-serif';
+      ctx.fillText(t('detail.ingredients').toUpperCase(), margin, ingredientsY);
+      let ingredientFontSize = format === 'square' ? 24 : 27;
+      let ingredientLineHeight = format === 'square' ? 27 : 31;
+      let ingredientLayout;
+      const buildIngredientLayout = columnsCount => {
+        const gap = 28;
+        const columnWidth = (width - margin * 2 - (columnsCount - 1) * gap) / columnsCount;
+        const columns = Array.from({ length: columnsCount }, () => []);
+        ctx.font = `500 ${ingredientFontSize}px Arial, sans-serif`;
+        ingredients.forEach((ingredient, index) => {
+          columns[index % columnsCount].push(canvasTextLines(ctx, `• ${ingredient}`, columnWidth));
+        });
+        const columnHeights = columns.map(items => items.reduce((total, lines) => total + lines.length * ingredientLineHeight + 8, 0));
+        return { columns, columnWidth, gap, height: Math.max(...columnHeights, 0) };
+      };
+      for (let columns = 2; columns <= 4; columns += 1) {
+        const candidate = buildIngredientLayout(columns);
+        if (!ingredientLayout || candidate.height < ingredientLayout.height) ingredientLayout = candidate;
+      }
+      while (ingredientLayout.height > sectionBottom - ingredientsY - 80 && ingredientFontSize > 10) {
+        ingredientFontSize -= 1;
+        ingredientLineHeight = Math.max(11, ingredientLineHeight - 1);
+        ingredientLayout = [2, 3, 4].map(buildIngredientLayout)
+          .reduce((best, candidate) => candidate.height < best.height ? candidate : best);
+      }
+      ctx.fillStyle = '#1c1917';
+      ingredientLayout.columns.forEach((column, columnIndex) => {
+        let cursor = ingredientsY + 56;
+        const x = margin + columnIndex * (ingredientLayout.columnWidth + ingredientLayout.gap);
+        column.forEach(lines => {
+          lines.forEach((line, lineIndex) => ctx.fillText(line, x, cursor + lineIndex * ingredientLineHeight));
+          cursor += lines.length * ingredientLineHeight + 8;
+        });
+      });
+      return { canvas, ctx, stepsY: Math.max(ingredientsY + 56 + ingredientLayout.height + 24, contentTop + 430) };
+    }
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#9c7753';
+    ctx.font = '700 26px Arial, sans-serif';
+    ctx.fillText('CARNET DE RECETTES', margin, 92);
+    ctx.fillStyle = '#1c1917';
+    ctx.font = '400 64px "League Gothic", Impact, sans-serif';
+    ctx.fillText(mainTitle, margin, 178);
+    ctx.fillStyle = '#9c7753';
+    ctx.font = '700 24px Arial, sans-serif';
+    ctx.fillText(t('share.steps').toUpperCase() + ` · ${t('share.continuation')}`, margin, 270);
+    return { canvas, ctx, stepsY: 270 };
+  };
+
+  while (stepIndex < steps.length || canvases.length === 0) {
+    const { canvas, ctx, stepsY } = drawPage(canvases.length);
+    ctx.fillStyle = '#9c7753';
+    ctx.font = '700 24px Arial, sans-serif';
+    if (canvases.length === 0 && stepsY <= sectionBottom - 42) {
+      ctx.fillText(t('share.steps').toUpperCase(), margin, stepsY);
+    }
+    const actualStepsY = stepsY;
+    ctx.fillStyle = '#1c1917';
+    ctx.font = `500 ${format === 'square' ? 22 : 25}px Arial, sans-serif`;
+    const lineHeight = format === 'square' ? 26 : 30;
+    const maxLines = Math.max(0, Math.floor((sectionBottom - actualStepsY - 42) / lineHeight));
+    let cursor = actualStepsY + 48;
+    let linesUsed = 0;
+    while (stepIndex < steps.length && linesUsed < maxLines) {
+      const lines = canvasTextLines(ctx, `${stepIndex + 1}. ${steps[stepIndex]}`, width - margin * 2);
+      const visible = lines.slice(0, maxLines - linesUsed);
+      visible.forEach((line, lineNumber) => ctx.fillText(line, margin, cursor + lineNumber * lineHeight));
+      cursor += visible.length * lineHeight + 5;
+      linesUsed += visible.length;
+      if (visible.length === lines.length) stepIndex += 1;
+      else break;
+    }
+    ctx.fillStyle = '#9c7753';
+    ctx.fillRect(margin, footerTop, width - margin * 2, 2);
+    ctx.fillStyle = '#686157';
+    ctx.font = '500 22px Arial, sans-serif';
+    ctx.fillText(display.category ? `${getCategoryEmoji(display.category)} ${display.category}` : 'Une recette à partager', margin, height - 38);
+    canvases.push(canvas);
+    if (stepIndex >= steps.length) break;
+  }
+  return canvases;
+}
+
+export async function renderRecipeShareCanvas(recipe, display, format = 'story') {
+  const canvases = await renderRecipeShareCanvases(recipe, display, format);
+  return canvases[0];
+}
+
+function closeShareCardDialog(dialog) {
+  dialog?.remove();
+  document.body.style.overflow = '';
+}
+
+async function openShareCardDialog(recipe, display) {
+  const dialog = document.createElement('div');
+  dialog.className = 'share-card-dialog';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.innerHTML = `
+    <div class="share-card-panel">
+      <div class="share-card-heading">
+        <div>
+          <p class="eyebrow">${t('share.eyebrow')}</p>
+          <h2>${t('share.title')}</h2>
+        </div>
+        <button class="share-card-close" type="button" aria-label="${t('share.close')}">×</button>
+      </div>
+      <div class="share-card-formats" role="group" aria-label="${t('share.format')}">
+        <button type="button" class="share-format-btn is-active" data-format="story" aria-pressed="true">${t('share.story')}</button>
+        <button type="button" class="share-format-btn" data-format="square" aria-pressed="false">${t('share.square')}</button>
+      </div>
+      <div class="share-card-pages" aria-label="${t('share.pages')}"></div>
+      <div class="share-card-preview"><canvas id="share-card-canvas"></canvas></div>
+      <div class="share-card-page-controls" hidden>
+        <button class="share-page-btn" type="button" data-page="previous">${t('share.previous')}</button>
+        <span class="share-card-page-label" aria-live="polite"></span>
+        <button class="share-page-btn" type="button" data-page="next">${t('share.next')}</button>
+      </div>
+      <p class="share-card-status" aria-live="polite"></p>
+      <div class="share-card-actions">
+        <button class="btn btn--secondary" type="button" data-action="download">${t('share.download')}</button>
+        <button class="btn btn--primary" type="button" data-action="share">${t('share.share')}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dialog);
+  document.body.style.overflow = 'hidden';
+  let format = 'story';
+  let canvases = [];
+  let pageIndex = 0;
+  const preview = dialog.querySelector('.share-card-preview');
+  const status = dialog.querySelector('.share-card-status');
+  const pageControls = dialog.querySelector('.share-card-page-controls');
+  const pageLabel = dialog.querySelector('.share-card-page-label');
+
+  const redraw = async () => {
+    preview.classList.add('is-loading');
+    canvases = await renderRecipeShareCanvases(recipe, display, format);
+    pageIndex = 0;
+    const canvas = canvases[pageIndex];
+    const oldCanvas = preview.querySelector('canvas');
+    if (oldCanvas) oldCanvas.replaceWith(canvas);
+    else preview.appendChild(canvas);
+    pageControls.hidden = canvases.length < 2;
+    pageLabel.textContent = t('share.pageOf').replace('{current}', String(pageIndex + 1)).replace('{total}', String(canvases.length));
+    dialog.querySelector('[data-page="previous"]').disabled = true;
+    dialog.querySelector('[data-page="next"]').disabled = canvases.length < 2;
+    preview.classList.remove('is-loading');
+  };
+  await redraw();
+  dialog.querySelectorAll('[data-format]').forEach(button => button.addEventListener('click', async () => {
+    format = button.dataset.format;
+    dialog.querySelectorAll('[data-format]').forEach(item => {
+      const isActive = item === button;
+      item.classList.toggle('is-active', isActive);
+      item.setAttribute('aria-pressed', String(isActive));
+    });
+    await redraw();
+  }));
+  const showPage = nextIndex => {
+    pageIndex = Math.max(0, Math.min(nextIndex, canvases.length - 1));
+    const oldCanvas = preview.querySelector('canvas');
+    if (oldCanvas) oldCanvas.replaceWith(canvases[pageIndex]);
+    pageLabel.textContent = t('share.pageOf').replace('{current}', String(pageIndex + 1)).replace('{total}', String(canvases.length));
+    dialog.querySelector('[data-page="previous"]').disabled = pageIndex === 0;
+    dialog.querySelector('[data-page="next"]').disabled = pageIndex === canvases.length - 1;
+  };
+  dialog.querySelector('[data-page="previous"]').addEventListener('click', () => showPage(pageIndex - 1));
+  dialog.querySelector('[data-page="next"]').addEventListener('click', () => showPage(pageIndex + 1));
+  dialog.querySelector('.share-card-close').addEventListener('click', () => closeShareCardDialog(dialog));
+  dialog.addEventListener('click', event => {
+    if (event.target === dialog) closeShareCardDialog(dialog);
+  });
+  dialog.querySelector('[data-action="download"]').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = `${(display.title || 'recette').replace(/[^\w-]+/g, '-').toLowerCase()}-${format}-${pageIndex + 1}.png`;
+    link.href = canvases[pageIndex].toDataURL('image/png');
+    link.click();
+  });
+  dialog.querySelector('[data-action="share"]').addEventListener('click', async () => {
+    if (!navigator.share || !canvases[pageIndex]) {
+      dialog.querySelector('[data-action="download"]').click();
+      status.textContent = t('share.fallback');
+      return;
+    }
+    try {
+      const blob = await new Promise(resolve => canvases[pageIndex].toBlob(resolve, 'image/png'));
+      await navigator.share({ title: display.title, text: t('share.text'), files: [new File([blob], `recette-${pageIndex + 1}.png`, { type: 'image/png' })] });
+    } catch (error) {
+      if (error.name !== 'AbortError') status.textContent = t('share.error');
+    }
+  });
+  const onEscape = event => {
+    if (event.key === 'Escape') {
+      document.removeEventListener('keydown', onEscape);
+      closeShareCardDialog(dialog);
+    }
+  };
+  document.addEventListener('keydown', onEscape);
+}
+
 // ─── RENDU DU MODE LIVRE DE CUISINE (Point 7) ───
 export function renderCookbookView(recipe, display, headerActionsHtml) {
   const { mainTitle, subtitle } = splitRecipeTitle(display.title, display.description);
@@ -694,6 +1014,9 @@ export async function openRecipeDetail(id) {
 
   const headerActionsHtml = `
     <div class="modal-header-actions" style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+      <button class="btn btn--sm btn--primary" id="btn-share-recipe" title="${t('share.title')}">
+        ↗ ${t('share.action')}
+      </button>
       <button class="btn btn--sm btn--secondary" id="btn-toggle-view" title="Changer le style d'affichage">
         ${viewMode === 'cookbook' ? t('detail.view.classic') : t('detail.view.cookbook')}
       </button>
@@ -718,6 +1041,9 @@ export async function openRecipeDetail(id) {
     const newMode = viewMode === 'cookbook' ? 'classic' : 'cookbook';
     localStorage.setItem('recipe_view_mode', newMode);
     openRecipeDetail(id);
+  });
+  document.getElementById('btn-share-recipe')?.addEventListener('click', () => {
+    openShareCardDialog(recipe, displayRecipe);
   });
 
   let selectedRating = Number(recipe.rating) || 0;

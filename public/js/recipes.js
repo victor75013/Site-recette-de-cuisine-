@@ -2,7 +2,7 @@
    recipes.js — Affichage et gestion des recettes (ES Module)
    ============================================================ */
 
-import { getAllRecipes, getRecipeById, deleteRecipe, currentUser, db } from './data.js';
+import { getAllRecipes, getRecipeById, deleteRecipe, saveRecipe, currentUser, db } from './data.js';
 import { t, getLang, translateCategory, getIngredientEmoji } from './i18n/index.js';
 import { getCachedTranslation, translateRecipeForDisplay, clearRecipeTranslation } from './i18n/translate-recipe.js';
 import { escapeHtml, formatTime, formatServings, isServingUnit, trapFocus } from './utils.js';
@@ -13,6 +13,7 @@ let currentCategoryFilter = '';
 let activeFocusTrapCleanup = null;
 let kitchenWakeLock = null;
 let kitchenVisibilityHandler = null;
+let favoritesOnly = false;
 
 const CATEGORY_EMOJI = {
   'Entrées': '🥗',
@@ -132,6 +133,7 @@ export function renderRecipeCard(recipe) {
     <article class="recipe-card" data-id="${escapeHtml(recipe.id)}" role="button" tabindex="0" aria-label="${escapeHtml(display.title)}">
       <div class="card-image-wrap">
         ${imageContent}
+        ${recipe.isFavorite || recipe.rating ? `<div class="card-personalization">${recipe.isFavorite ? '★' : ''}${recipe.rating ? ` <span>${'★'.repeat(Math.min(5, recipe.rating))}</span>` : ''}</div>` : ''}
         <div class="card-overlay">
           ${display.category ? `<span class="card-category">${emoji} ${escapeHtml(display.category)}</span>` : ''}
           <h2 class="card-title">${escapeHtml(display.title)}</h2>
@@ -160,7 +162,8 @@ export async function renderRecipeGrid() {
 
   const categoryBarHtml = `
     <nav class="category-bar" id="category-bar" aria-label="Filtrer par catégorie">
-      <button class="category-link ${!currentCategoryFilter ? 'active' : ''}" data-category="">${t('category.all')}</button>
+      <button class="category-link ${!currentCategoryFilter && !favoritesOnly ? 'active' : ''}" data-category="">${t('category.all')}</button>
+      <button class="category-link ${favoritesOnly ? 'active' : ''}" data-favorites="true">${t('personalization.favorites')}</button>
       ${categories.map(c => `
         <button class="category-link ${currentCategoryFilter === c ? 'active' : ''}" data-category="${escapeHtml(c)}">
           ${escapeHtml(translateCategory(c).toUpperCase())}
@@ -203,6 +206,7 @@ export async function renderRecipeGrid() {
         document.querySelectorAll('.category-link').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
         currentCategoryFilter = btn.dataset.category || '';
+        favoritesOnly = btn.dataset.favorites === 'true';
         updateRecipeGrid();
       }
     });
@@ -251,6 +255,7 @@ export async function updateRecipeGrid() {
   const allRecipes = await getAllRecipes();
 
   const filtered = allRecipes.filter(r => {
+    if (favoritesOnly && !r.isFavorite) return false;
     if (currentAuthorFilter && r.author !== currentAuthorFilter) return false;
     if (currentCategoryFilter && r.category !== currentCategoryFilter) return false;
     if (!searchQuery) return true;
@@ -407,7 +412,38 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
         <button class="btn btn--secondary" id="btn-edit-recipe" data-id="${escapeHtml(recipe.id)}">${t('detail.edit')}</button>
         <button class="btn btn--danger" id="btn-delete-recipe" data-id="${escapeHtml(recipe.id)}">${t('detail.delete')}</button>
       </div>
+      ${renderPersonalizationPanel(recipe)}
     </div>
+  `;
+}
+
+function renderPersonalizationPanel(recipe) {
+  const tags = Array.isArray(recipe.tags) ? recipe.tags.join(', ') : (recipe.tags || '');
+  const rating = Number(recipe.rating) || 0;
+  return `
+    <section class="recipe-personalization">
+      <div class="personalization-heading">
+        <h3>${t('personalization.title')}</h3>
+        <button class="favorite-toggle ${recipe.isFavorite ? 'is-active' : ''}" id="btn-toggle-favorite" type="button" aria-pressed="${recipe.isFavorite ? 'true' : 'false'}">
+          ${recipe.isFavorite ? '★' : '☆'} <span>${t('personalization.favorite')}</span>
+        </button>
+      </div>
+      <div class="rating-control" role="group" aria-label="${t('personalization.rating')}">
+        <span>${t('personalization.rating')}</span>
+        ${[1, 2, 3, 4, 5].map(value => `<button type="button" class="${value <= rating ? 'is-active' : ''}" data-rating="${value}" aria-label="${value} ${t('personalization.stars')}">★</button>`).join('')}
+        <button type="button" class="rating-clear" id="btn-clear-rating">${t('personalization.clear')}</button>
+      </div>
+      <div class="personalization-fields">
+        <label>${t('personalization.tags')}
+          <input class="form-input" id="recipe-tags" type="text" value="${escapeHtml(tags)}" placeholder="${t('personalization.tags.placeholder')}" />
+        </label>
+        <label>${t('personalization.notes')}
+          <textarea class="form-textarea" id="recipe-notes" rows="3" placeholder="${t('personalization.notes.placeholder')}">${escapeHtml(recipe.personalNotes || '')}</textarea>
+        </label>
+      </div>
+      <button class="btn btn--secondary btn--sm" id="btn-save-personalization" type="button">${t('personalization.save')}</button>
+      <span class="personalization-feedback" id="personalization-feedback" role="status"></span>
+    </section>
   `;
 }
 
@@ -611,6 +647,7 @@ export function renderClassicView(recipe, display, headerActionsHtml) {
         <button class="btn btn--secondary" id="btn-edit-recipe" data-id="${escapeHtml(recipe.id)}">${t('detail.edit')}</button>
         <button class="btn btn--danger" id="btn-delete-recipe" data-id="${escapeHtml(recipe.id)}">${t('detail.delete')}</button>
       </div>
+      ${renderPersonalizationPanel(recipe)}
     </div>
   `;
 }
@@ -688,6 +725,50 @@ export async function openRecipeDetail(id) {
 
   document.getElementById('btn-kitchen-mode')?.addEventListener('click', () => {
     openKitchenMode(recipe, displayRecipe);
+  });
+
+  let selectedRating = Number(recipe.rating) || 0;
+  document.querySelectorAll('[data-rating]').forEach(button => {
+    button.addEventListener('click', () => {
+      selectedRating = Number(button.dataset.rating);
+      document.querySelectorAll('[data-rating]').forEach(star => {
+        star.classList.toggle('is-active', Number(star.dataset.rating) <= selectedRating);
+      });
+    });
+  });
+  document.getElementById('btn-clear-rating')?.addEventListener('click', () => {
+    selectedRating = 0;
+    document.querySelectorAll('[data-rating]').forEach(star => star.classList.remove('is-active'));
+  });
+  document.getElementById('btn-toggle-favorite')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    try {
+      await saveRecipe({ ...recipe, isFavorite: !recipe.isFavorite });
+      recipe.isFavorite = !recipe.isFavorite;
+      button.classList.toggle('is-active', recipe.isFavorite);
+      button.setAttribute('aria-pressed', String(recipe.isFavorite));
+      button.firstChild.textContent = recipe.isFavorite ? '★ ' : '☆ ';
+    } catch (err) {
+      window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: t('toast.error.generic') + err.message, type: 'error' } }));
+    }
+  });
+  document.getElementById('btn-save-personalization')?.addEventListener('click', async () => {
+    const tags = document.getElementById('recipe-tags').value
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(Boolean)
+      .slice(0, 20);
+    const personalNotes = document.getElementById('recipe-notes').value.trim();
+    const feedback = document.getElementById('personalization-feedback');
+    try {
+      await saveRecipe({ ...recipe, rating: selectedRating || null, tags, personalNotes });
+      recipe.rating = selectedRating || null;
+      recipe.tags = tags;
+      recipe.personalNotes = personalNotes;
+      if (feedback) feedback.textContent = t('personalization.saved');
+    } catch (err) {
+      if (feedback) feedback.textContent = t('toast.error.generic') + err.message;
+    }
   });
 
   // Chargement nutrition asynchrone

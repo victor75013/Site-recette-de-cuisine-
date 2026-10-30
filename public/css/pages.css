@@ -195,6 +195,47 @@
 .recipe-detail-card .detail-actions {
   margin-bottom: 4px;
 }
+.recipe-personalization {
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.personalization-heading,
+.rating-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.personalization-heading { justify-content: space-between; margin-bottom: 16px; }
+.personalization-heading h3 { font-family: var(--font-heading); font-weight: 400; }
+.favorite-toggle,
+.rating-control button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.favorite-toggle { padding: 8px 12px; border-radius: var(--radius-sm); }
+.favorite-toggle.is-active { color: var(--accent); background: var(--accent-glow); }
+.rating-control { margin-bottom: 18px; color: var(--text-muted); font-size: 0.9rem; }
+.rating-control button { padding: 2px; font-size: 1.45rem; color: var(--border); }
+.rating-control button.is-active { color: var(--accent); }
+.rating-control .rating-clear { margin-left: auto; font-size: 0.78rem; color: var(--text-muted); }
+.personalization-fields { display: grid; gap: 14px; margin-bottom: 16px; }
+.personalization-fields label { display: grid; gap: 6px; color: var(--text-muted); font-size: 0.82rem; font-weight: 600; }
+.personalization-feedback { margin-left: 10px; color: var(--accent); font-size: 0.82rem; }
+.card-personalization {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  color: var(--accent);
+  font-size: 1.15rem;
+  text-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.card-personalization span { font-size: 0.75rem; }
 .recipe-detail-card .detail-body {
   padding: 32px 36px 36px;
 }

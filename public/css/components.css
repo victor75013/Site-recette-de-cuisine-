@@ -586,6 +586,26 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.bottom-nav-icon {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 21px 21px;
+}
+.bottom-nav-btn[data-tab="home"] .bottom-nav-icon {
+  background-image: url("../Image%20mobile/book-open.png");
+}
+.bottom-nav-btn[data-tab="sites"] .bottom-nav-icon {
+  background-image: url("../Image%20mobile/globe.png");
+}
+.bottom-nav-btn[data-tab="import"] .bottom-nav-icon {
+  background-image: url("../Image%20mobile/arrow-down-to-line.png");
+}
+.bottom-nav-btn[data-tab="settings"] .bottom-nav-icon {
+  background-image: url("../Image%20mobile/settings.png");
+}
+.bottom-nav-icon svg {
+  display: none;
+}
 .bottom-nav-btn--add {
   flex: 0 0 64px;
   min-height: 64px;

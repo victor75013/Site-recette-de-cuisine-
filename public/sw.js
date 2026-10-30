@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carnet-recettes-v48';
+const CACHE_NAME = 'carnet-recettes-v50';
 
 // Fichiers de base pré-mis en cache
 const PRECACHE_ASSETS = [
@@ -8,6 +8,10 @@ const PRECACHE_ASSETS = [
   './logo.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './Image mobile/book-open.png',
+  './Image mobile/globe.png',
+  './Image mobile/arrow-down-to-line.png',
+  './Image mobile/settings.png',
   './css/tokens.css',
   './css/base.css',
   './css/components.css',

@@ -273,10 +273,14 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
   }).join('');
 
   const servUnit = display.servingsUnit || t('unit.people');
+  const totalTime = (display.prepTime || 0) + (display.cookTime || 0);
   const metaItems = [
+    display.category ? `<span class="cookbook-meta-item cookbook-meta-item--category"><strong>${getCategoryEmoji(display.category)} ${escapeHtml(display.category)}</strong></span>` : '',
     display.servings ? `<span class="cookbook-meta-item">${t('detail.for')} <strong>${display.servings} ${servUnit.toUpperCase()}</strong></span>` : '',
     display.prepTime ? `<span class="cookbook-meta-item">${t('detail.prep')} <strong>${formatTime(display.prepTime)}</strong></span>` : '',
     display.cookTime ? `<span class="cookbook-meta-item">${t('detail.cook')} <strong>${formatTime(display.cookTime)}</strong></span>` : '',
+    totalTime ? `<span class="cookbook-meta-item">${t('badge.total')} <strong>${formatTime(totalTime)}</strong></span>` : '',
+    display.author ? `<span class="cookbook-meta-item">${t('detail.by')} <strong>${escapeHtml(display.author)}</strong></span>` : '',
   ].filter(Boolean).join(' &nbsp;•&nbsp; ');
   const ingCount = (display.ingredients || []).filter(ingredient => {
     const text = getIngredientText(ingredient);
@@ -296,6 +300,7 @@ export function renderCookbookView(recipe, display, headerActionsHtml) {
         <h2 class="cookbook-title" id="modal-title">${escapeHtml(mainTitle)}</h2>
         ${subtitle ? `<div class="cookbook-subtitle">${escapeHtml(subtitle)}</div>` : ''}
       </div>
+      ${display.description && subtitle !== display.description ? `<p class="cookbook-description">${escapeHtml(display.description)}</p>` : ''}
       ${metaItems ? `<div class="cookbook-meta-bar">${metaItems}</div>` : ''}
 
       ${ingredientsGridHtml ? `
@@ -435,9 +440,8 @@ export async function openRecipeDetail(id) {
   const recipe = await getRecipeById(id);
   if (!recipe) return;
 
-  const overlay = document.getElementById('modal-overlay');
-  const modal = document.getElementById('modal');
-  const content = document.getElementById('modal-content');
+  const app = document.getElementById('app');
+  if (!app) return;
 
   const displayRecipe = await translateRecipeForDisplay(recipe);
   const viewMode = localStorage.getItem('recipe_view_mode') || 'cookbook';
@@ -450,17 +454,18 @@ export async function openRecipeDetail(id) {
     </div>
   `;
 
-  content.innerHTML = viewMode === 'cookbook'
-    ? renderCookbookView(recipe, displayRecipe, headerActionsHtml)
-    : renderClassicView(recipe, displayRecipe, headerActionsHtml);
-
-  overlay.classList.add('open');
-  overlay.setAttribute('aria-hidden', 'false');
-  document.body.style.overflow = 'hidden';
-
-  // Point 28 : Focus Trap accessible
-  if (activeFocusTrapCleanup) activeFocusTrapCleanup();
-  activeFocusTrapCleanup = trapFocus(modal, closeModal);
+  app.innerHTML = `
+    <div class="recipe-detail-page">
+      <button class="recipe-back-btn" id="btn-back-recipes" type="button">
+        <span aria-hidden="true">←</span> ${t('detail.back')}
+      </button>
+      <article class="recipe-detail-card">
+        ${viewMode === 'cookbook'
+          ? renderCookbookView(recipe, displayRecipe, headerActionsHtml)
+          : renderClassicView(recipe, displayRecipe, headerActionsHtml)}
+      </article>
+    </div>
+  `;
 
   // Bascule de vue
   document.getElementById('btn-toggle-view')?.addEventListener('click', () => {
@@ -477,8 +482,11 @@ export async function openRecipeDetail(id) {
 
   // Événements d'édition et suppression
   document.getElementById('btn-edit-recipe')?.addEventListener('click', () => {
-    closeModal();
     window.dispatchEvent(new CustomEvent('app:navigate', { detail: { tab: 'add', editId: recipe.id } }));
+  });
+
+  document.getElementById('btn-back-recipes')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('app:navigate', { detail: { tab: 'home' } }));
   });
 
   document.getElementById('btn-delete-recipe')?.addEventListener('click', async () => {
@@ -486,7 +494,6 @@ export async function openRecipeDetail(id) {
       try {
         clearRecipeTranslation(recipe.id);
         await deleteRecipe(recipe.id);
-        closeModal();
         await renderRecipeGrid();
         window.dispatchEvent(new CustomEvent('app:toast', { detail: { message: t('toast.deleted'), type: 'success' } }));
       } catch (err) {

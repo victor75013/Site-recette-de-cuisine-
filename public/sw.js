@@ -1,4 +1,4 @@
-const CACHE_NAME = 'carnet-recettes-v34';
+const CACHE_NAME = 'carnet-recettes-v37';
 
 // Fichiers de base pré-mis en cache
 const PRECACHE_ASSETS = [

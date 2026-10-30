@@ -37,6 +37,7 @@ export default {
   // Recipe detail
   'detail.edit':        'Edit',
   'detail.delete':      'Delete',
+  'detail.back':        'Back to recipes',
   'detail.delete.confirm': 'Are you sure you want to delete',
   'detail.view.classic':'🎨 Classic View',
   'detail.view.cookbook':'📖 Cookbook Mode',
@@ -47,6 +48,7 @@ export default {
   'detail.persons':     'PEOPLE',
   'detail.prep':        'PREP:',
   'detail.cook':        'COOK:',
+  'detail.by':           'BY',
   'detail.tip':         'Tip:',
   'detail.nutrition.loading': '🌿 Searching Open Food Facts…',
   'detail.nutrition.unavailable': 'ℹ️ Nutritional values not available for these ingredients.',
